@@ -14,7 +14,7 @@ app.use(express.json());
 const authenticate = (
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) => {
   const userId = req.headers.authorization;
 
