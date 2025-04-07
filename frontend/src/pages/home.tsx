@@ -2,8 +2,10 @@ import { Plus } from "lucide-react";
 import React from "react";
 import { Habit } from "../components/Habit";
 import { CreateModal } from "../components/modals/CreateModal";
+import { NotificationConsent } from "../components/NotificationConsent";
 import { Page } from "../components/Page";
 import { useUser } from "../state/user";
+import { scheduleHabitCheck } from "../utils/habitChecker";
 
 export default function Home() {
   const { habits, createHabit, updateUserInfo } = useUser();
@@ -11,6 +13,7 @@ export default function Home() {
 
   React.useEffect(() => {
     updateUserInfo();
+    scheduleHabitCheck();
   }, [localStorage]);
 
   return (
@@ -24,6 +27,8 @@ export default function Home() {
           <h1 className="text-6xl font-bold">habits</h1>
           <h2 className="text-light-gray">Track your habits every day</h2>
         </div>
+
+        <NotificationConsent />
 
         <div className="flex w-full max-w-full flex-col gap-2 md:max-w-[750px]">
           {habits?.map((habit) => <Habit {...habit} />)}

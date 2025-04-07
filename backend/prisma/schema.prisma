@@ -11,9 +11,10 @@ datasource db {
 }
 
 model User {
-  id        String   @id
-  created   DateTime @default(now())
-  habits    Habit[]
+  id              String            @id
+  created         DateTime          @default(now())
+  habits          Habit[]
+  pushSubscription PushSubscription?
 }
 
 model Habit {
@@ -32,4 +33,15 @@ model HabitCompletion {
   habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
 
   @@unique([habitId, day])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 } 

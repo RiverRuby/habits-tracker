@@ -5,6 +5,21 @@ import "./index.css";
 import Home from "./pages/home";
 import Sync from "./pages/sync";
 import reportWebVitals from "./reportWebVitals";
+import { pushNotificationService } from "./utils/pushNotificationService";
+
+// Register the service worker for PWA functionality
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    pushNotificationService
+      .registerServiceWorker()
+      .then((registration) => {
+        console.log("Service Worker registered successfully:", registration);
+      })
+      .catch((error) => {
+        console.error("Service Worker registration failed:", error);
+      });
+  });
+}
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
