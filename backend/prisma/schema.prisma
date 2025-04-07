@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id
+  created   DateTime @default(now())
+  habits    Habit[]
+}
+
+model Habit {
+  id        String   @id
+  name      String
+  created   DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  completed HabitCompletion[]
+}
+
+model HabitCompletion {
+  id        String   @id @default(cuid())
+  day       String   // Format: "DD MMM YYYY"
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, day])
+} 
