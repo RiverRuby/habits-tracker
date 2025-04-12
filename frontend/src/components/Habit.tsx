@@ -1,22 +1,23 @@
 import classNames from "classnames";
-import { Trash } from "lucide-react";
+import { CalendarPlus, Trash } from "lucide-react";
 import React from "react";
 import { Habit as HabitType, useUser } from "../state/user";
 import { api } from "../utils/api";
 import { calculateStreaks, getLast365Days } from "../utils/utils";
 import { HabitCube } from "./HabitCube";
 import { ConfirmModal } from "./modals/ConfirmModal";
+import { NaturalDateInput } from "./NaturalDateInput";
 
 export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
-  const { deleteHabit, renameHabit } = useUser();
+  const { deleteHabit, renameHabit, updateUserInfo } = useUser();
   const [habitName, setHabitName] = React.useState(name);
-  const [completions, setCompletions] = React.useState(completed);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [showNaturalDateInput, setShowNaturalDateInput] = React.useState(false);
   const ref = React.useRef<HTMLDivElement | null>(null);
   const last365Days = React.useMemo(getLast365Days, []);
   const { currentStreak, longestStreak } = React.useMemo(
-    () => calculateStreaks(completions),
-    [completions],
+    () => calculateStreaks(completed),
+    [completed],
   );
 
   const spanRef = React.useRef<HTMLSpanElement>(null);
@@ -35,25 +36,19 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
   }, []);
 
   const logDay = async (day: string) => {
-    const newCompletions = [...completions, day];
-    setCompletions(newCompletions);
-
     await api.post("/habits/log", {
       id: id,
       day: day,
     });
+    await updateUserInfo();
   };
 
   const unlogDay = async (day: string) => {
-    const newCompletions = completions.filter(
-      (completion) => completion !== day,
-    );
-    setCompletions(newCompletions);
-
     await api.post("/habits/unlog", {
       id: id,
       day: day,
     });
+    await updateUserInfo();
   };
 
   // group days by month
@@ -90,6 +85,15 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
             setShowDeleteModal(false);
           }}
         />
+      )}
+
+      {showNaturalDateInput && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <NaturalDateInput
+            habitId={id}
+            onClose={() => setShowNaturalDateInput(false)}
+          />
+        </div>
       )}
 
       <div className="group flex flex-col gap-2 rounded-lg bg-dark-gray p-4 md:max-w-[750px]">
@@ -142,12 +146,21 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
             </div>
           </div>
 
-          <button
-            className="min-w-fit cursor-pointer p-2 duration-100 group-hover:opacity-100 md:opacity-0"
-            onClick={() => setShowDeleteModal(true)}
-          >
-            <Trash className="size-5 text-red-500" />
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="min-w-fit cursor-pointer p-2 duration-100 group-hover:opacity-100 md:opacity-0"
+              onClick={() => setShowNaturalDateInput(true)}
+            >
+              <CalendarPlus className="text-blue-500 size-5" />
+            </button>
+
+            <button
+              className="min-w-fit cursor-pointer p-2 duration-100 group-hover:opacity-100 md:opacity-0"
+              onClick={() => setShowDeleteModal(true)}
+            >
+              <Trash className="size-5 text-red-500" />
+            </button>
+          </div>
         </div>
 
         <div
@@ -179,7 +192,7 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
                 key={index}
                 day={day}
                 index={index}
-                completions={completions}
+                completions={completed}
                 last365Days={last365Days}
                 logDay={logDay}
                 unlogDay={unlogDay}

@@ -6,7 +6,7 @@ import { Page } from "../components/Page";
 import { useUser } from "../state/user";
 
 export default function Home() {
-  const { habits, createHabit, updateUserInfo } = useUser();
+  const { habits, updateUserInfo } = useUser();
   const [showCreateModal, setShowCreateModal] = React.useState(false);
 
   React.useEffect(() => {
@@ -26,7 +26,7 @@ export default function Home() {
         </div>
 
         <div className="flex w-full max-w-full flex-col gap-2 md:max-w-[750px]">
-          {habits?.map((habit) => <Habit {...habit} />)}
+          {habits?.map((habit) => <Habit key={habit.id} {...habit} />)}
 
           <button
             className="flex h-24 w-full items-center justify-center gap-2 rounded-lg bg-gray text-xl font-bold duration-100 hover:bg-opacity-80"

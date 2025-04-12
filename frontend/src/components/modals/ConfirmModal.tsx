@@ -3,26 +3,22 @@ import { Button } from "../Button";
 import { Modal } from "./Modal";
 
 interface Props {
-  label?: React.ReactNode;
-  description?: React.ReactNode;
-  onCancel: () => void;
+  description?: string;
   onConfirm: () => void;
+  onCancel: () => void;
 }
 
 export const ConfirmModal: React.FC<Props> = ({
-  label = "Are you sure?",
-  description,
-  onCancel,
+  description = "Are you sure?",
   onConfirm,
+  onCancel,
 }) => {
   return (
-    <Modal className="min-h-fit" onClose={onCancel}>
-      <div className="text-center text-xl font-bold sm:px-8">{label}</div>
+    <Modal className="min-h-fit gap-4" onClose={onCancel}>
+      <div className="text-center text-xl font-bold sm:px-8">{description}</div>
 
-      <div className="text-light-gray">{description}</div>
-
-      <div className="mt-4 flex gap-2">
-        <Button className="w-full" onClick={onCancel}>
+      <div className="flex flex-col gap-2">
+        <Button className="w-full" color="gray" onClick={onCancel}>
           Cancel
         </Button>
 

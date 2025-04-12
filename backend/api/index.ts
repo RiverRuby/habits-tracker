@@ -2,9 +2,14 @@ import express from "express";
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 import { nanoid } from "nanoid";
+import { GoogleGenAI } from "@google/genai";
+import { constants } from "buffer";
 
 const app = express();
 const prisma = new PrismaClient();
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 // Middleware
 app.use(cors());
@@ -287,6 +292,113 @@ app.post("/habits/unlog", authenticate, async (req, res) => {
     return res
       .status(500)
       .json({ message: "Failed to unlog habit completion" });
+  }
+});
+
+// Parse natural language dates and log habit completions
+app.post("/habits/log-natural", authenticate, async (req, res) => {
+  try {
+    const { userId, id, naturalDate } = req.body;
+
+    if (!id || !naturalDate) {
+      return res.status(400).json({
+        message: "Habit ID and natural date description are required",
+      });
+    }
+
+    // Check if the habit exists and belongs to the user
+    const habit = await prisma.habit.findFirst({
+      where: {
+        id,
+        userId,
+      },
+    });
+
+    if (!habit) {
+      return res.status(404).json({ message: "Habit not found" });
+    }
+
+    // Sanitize the natural language input
+    const sanitizedInput = naturalDate
+      .replace(/["\\]/g, "") // Remove quotes and backslashes
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, "") // Remove control characters
+      .replace(/[^\x20-\x7E\s]/g, "") // Keep only printable ASCII and whitespace
+      .trim();
+
+    if (!sanitizedInput) {
+      return res
+        .status(400)
+        .json({ message: "Invalid date description after sanitization" });
+    }
+
+    // Get today's date in a consistent format
+    const today = new Date().toLocaleDateString("en-US", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
+    console.log(sanitizedInput);
+
+    // Use Gemini to parse the natural language date
+    const prompt = `Parse the following natural language date description into a JSON array of dates in the format "DDD, D MMM, YYYY" where DDD is the 3-letter day name and D is the day without leading zeros for days 1-9. For relative dates, use today (${today}) as the reference point. Example output format: ["Wed, 20 Mar, 2024", "Thu, 1 Apr, 2024"]. Natural language input: ${sanitizedInput}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt,
+    });
+    const text = response.text || "";
+    console.log(text);
+
+    let dates;
+    try {
+      // Remove markdown formatting if present
+      const jsonText = text.replace(/^```json\n|\n```$/g, "").trim();
+      dates = JSON.parse(jsonText);
+      if (!Array.isArray(dates)) {
+        throw new Error("Response is not an array");
+      }
+
+      // Validate each date string format
+      const dateRegex = /^[A-Za-z]{3}, \d{1,2} [A-Za-z]{3}, \d{4}$/;
+      const validDates = dates.every(
+        (date) => typeof date === "string" && dateRegex.test(date)
+      );
+      if (!validDates) {
+        throw new Error("Invalid date format in response");
+      }
+    } catch (error) {
+      console.error("Failed to parse Gemini response:", error);
+      return res
+        .status(500)
+        .json({ message: "Failed to parse natural language date" });
+    }
+
+    // Create habit completions for each date
+    const completions = await Promise.all(
+      dates.map(async (day) => {
+        try {
+          return await prisma.habitCompletion.create({
+            data: {
+              day,
+              habitId: id,
+            },
+          });
+        } catch (error: any) {
+          // Skip if completion already exists
+          if (error.code !== "P2002") {
+            console.error("Error creating habit completion:", error);
+          }
+          return null;
+        }
+      })
+    );
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Error logging habit completion:", error);
+    return res.status(500).json({ message: "Failed to log habit completion" });
   }
 });
 

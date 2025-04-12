@@ -1,33 +1,34 @@
+import React from "react";
 import classNames from "classnames";
-import React, { MouseEventHandler } from "react";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
-  children?: React.ReactNode;
-  color?: "white" | "red";
+  children: React.ReactNode;
+  onClick?: () => void;
   className?: string;
-  onClick?: MouseEventHandler<HTMLButtonElement>;
+  disabled?: boolean;
+  color?: "blue" | "red" | "gray";
 }
 
 export const Button: React.FC<Props> = ({
   children,
-  color = "white",
-  className,
   onClick,
+  className,
+  disabled,
+  color = "blue",
 }) => {
   return (
     <button
-      className={twMerge(
-        classNames(
-          "rounded-md px-4 py-1 font-bold duration-100 hover:bg-opacity-80",
-          {
-            "bg-white text-black": color === "white",
-            "bg-red-500": color === "red",
-          },
-        ),
+      onClick={onClick}
+      disabled={disabled}
+      className={classNames(
+        "rounded-md px-4 py-2 font-bold duration-100 hover:bg-opacity-80 disabled:cursor-not-allowed disabled:opacity-50",
+        {
+          "bg-blue-500": color === "blue",
+          "bg-red-500": color === "red",
+          "bg-gray": color === "gray",
+        },
         className,
       )}
-      onClick={onClick}
     >
       {children}
     </button>

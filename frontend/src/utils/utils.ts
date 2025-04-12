@@ -62,9 +62,11 @@ export const parseDate = (dateStr: string): Date => {
 };
 
 export const calculateStreaks = (completedDays: string[]) => {
+  console.log(completedDays);
   const dates = completedDays
     .map(parseDate)
     .sort((a, b) => a.getTime() - b.getTime());
+  console.log(dates);
 
   let longestStreak = 0;
   let currentStreak = 0;

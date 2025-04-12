@@ -59,6 +59,7 @@ export const useUser = create<Store>()((set) => ({
 
     if (info?.habits) {
       set((state) => ({ ...state, ...info, loaded: true }));
+      console.log(info);
     }
   },
 }));
