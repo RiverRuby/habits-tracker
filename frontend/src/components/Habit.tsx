@@ -20,6 +20,29 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
     [completed],
   );
 
+  // Calculate year and 30 days statistics
+  const yearStats = React.useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const yearCompletions = completed.filter((day) => {
+      const year = parseInt(day.split(", ")[2]);
+      return year === currentYear;
+    });
+    return yearCompletions.length;
+  }, [completed]);
+
+  const past30DaysStats = React.useMemo(() => {
+    // Get dates from the last 30 days
+    const past30Days = last365Days.slice(0, 30);
+    const completionsInLast30Days = completed.filter((day) =>
+      past30Days.includes(day),
+    ).length;
+
+    if (completionsInLast30Days === 0) return 0;
+
+    const ratio = 30 / completionsInLast30Days;
+    return ratio.toFixed(1);
+  }, [completed, last365Days]);
+
   const spanRef = React.useRef<HTMLSpanElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -199,6 +222,19 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
               />
             ))}
           </div>
+        </div>
+
+        {/* summary line - moved outside the scrollable container */}
+        <div className="text-gray-300 mt-2 flex flex-wrap gap-1 text-xs">
+          <span>Year: {yearStats} times</span>
+          <span>{"//"}</span>
+          {Number(past30DaysStats) > 0 && (
+            <span>Month: Every {past30DaysStats} days</span>
+          )}
+          {past30DaysStats === 0 && completed.length > 0 && (
+            <span>Past 30 days: Not completed</span>
+          )}
+          {completed.length === 0 && <span>No completions yet</span>}
         </div>
       </div>
     </>
