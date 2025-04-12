@@ -32,7 +32,8 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
 
   const past30DaysStats = React.useMemo(() => {
     // Get dates from the last 30 days
-    const past30Days = last365Days.slice(0, 30);
+    const past30Days = getLast365Days().slice(0, 30);
+
     const completionsInLast30Days = completed.filter((day) =>
       past30Days.includes(day),
     ).length;
