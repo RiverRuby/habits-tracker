@@ -6,6 +6,7 @@ import Home from "./pages/home";
 import Sync from "./pages/sync";
 import Vivek from "./pages/vivek";
 import reportWebVitals from "./reportWebVitals";
+import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
@@ -19,6 +20,9 @@ root.render(
     </Routes>
   </BrowserRouter>,
 );
+
+// Register service worker for PWA capabilities
+serviceWorkerRegistration.register();
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
