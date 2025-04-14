@@ -402,6 +402,130 @@ app.post("/habits/log-natural", authenticate, async (req, res) => {
   }
 });
 
+// Process voice transcript for habit identification and date extraction
+app.post("/habits/process-voice", authenticate, async (req, res) => {
+  try {
+    const { userId, transcript } = req.body;
+
+    if (!transcript) {
+      return res.status(400).json({
+        message: "Transcript is required",
+      });
+    }
+
+    // Sanitize the transcript
+    const sanitizedTranscript = transcript
+      .replace(/["\\]/g, "") // Remove quotes and backslashes
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, "") // Remove control characters
+      .replace(/[^\x20-\x7E\s]/g, "") // Keep only printable ASCII and whitespace
+      .trim();
+
+    if (!sanitizedTranscript) {
+      return res
+        .status(400)
+        .json({ message: "Invalid transcript after sanitization" });
+    }
+
+    console.log(sanitizedTranscript);
+
+    // Fetch user's existing habits for context
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { habits: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const existingHabits = user.habits.map((habit) => habit.name);
+    const habitsContext =
+      existingHabits.length > 0
+        ? `User's existing habits: ${existingHabits.join(", ")}.`
+        : "User doesn't have any existing habits yet.";
+
+    // Get today's date in a consistent format
+    const today = new Date().toLocaleDateString("en-US", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
+    // Use Gemini to analyze the voice transcript
+    const prompt = `
+      Analyze this voice transcript from a habit tracker app: "${sanitizedTranscript}"
+      
+      ${habitsContext}
+      
+      Extract the following information and return it as JSON:
+      1. The habit mentioned (what activity the user is tracking)
+      2. The date or time period when the user did/wants to do this habit
+      
+      Today's date for reference: ${today}
+      
+      If the transcript mentions or closely matches an existing habit, use that exact habit name.
+      
+      Return ONLY valid JSON in this exact format:
+      {
+        "habit": "specific habit name",
+        "day": "specific date or time description"
+      }
+      
+      For example, if the transcript is "I went for a run yesterday", return:
+      {
+        "habit": "run",
+        "day": "yesterday"
+      }
+      
+      Or if the transcript is "I want to read a book every Monday", return:
+      {
+        "habit": "read a book",
+        "day": "every Monday"
+      }
+      
+      Keep the habit name concise but descriptive. The date can be a specific date, day of week, or relative term.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt,
+    });
+
+    const text = response.text || "";
+    console.log("Gemini response:", text);
+
+    let result;
+    try {
+      // Remove markdown formatting if present
+      const jsonText = text.replace(/^```json\n|\n```$/g, "").trim();
+      result = JSON.parse(jsonText);
+
+      if (!result.habit || !result.day) {
+        throw new Error("Missing required fields in response");
+      }
+    } catch (error) {
+      console.error("Failed to parse Gemini response:", error);
+      return res
+        .status(500)
+        .json({ message: "Failed to process voice transcript" });
+    }
+
+    return res.json({
+      success: true,
+      result: {
+        habit: result.habit,
+        day: result.day,
+      },
+    });
+  } catch (error) {
+    console.error("Error processing voice transcript:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to process voice transcript" });
+  }
+});
+
 // Start the server if not running in Vercel
 if (process.env.NODE_ENV !== "production") {
   const port = process.env.PORT || 3001;

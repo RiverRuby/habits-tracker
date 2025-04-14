@@ -8,7 +8,7 @@ interface Props {
   completions: string[];
   index: number;
   last365Days: string[];
-
+  viewOnly?: boolean;
   logDay: (day: string) => void;
   unlogDay: (day: string) => void;
 }
@@ -20,6 +20,7 @@ export const HabitCube: React.FC<Props> = ({
   last365Days,
   logDay,
   unlogDay,
+  viewOnly = false,
 }) => {
   const [gotLogged, setGotLogged] = React.useState(false);
   const isFiller = day === "FILLER";
@@ -39,8 +40,9 @@ export const HabitCube: React.FC<Props> = ({
       data-tooltip-id={day}
       data-tooltip-content={day}
       className={classNames(
-        "size-4 cursor-pointer rounded-sm border-[1px] border-transparent",
+        "size-4 rounded-sm border-[1px] border-transparent",
         {
+          "cursor-pointer": !viewOnly && !isFiller,
           "bg-gray hover:bg-light-gray":
             !isFiller && !completions.includes(day),
           "bg-green-500": completions.includes(day),
@@ -49,7 +51,7 @@ export const HabitCube: React.FC<Props> = ({
         },
       )}
       onClick={() => {
-        if (isFiller) return;
+        if (isFiller || viewOnly) return;
 
         if (completions.includes(day)) {
           unlogDay(day);

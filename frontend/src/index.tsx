@@ -4,6 +4,7 @@ import "react-tooltip/dist/react-tooltip.css";
 import "./index.css";
 import Home from "./pages/home";
 import Sync from "./pages/sync";
+import Vivek from "./pages/vivek";
 import reportWebVitals from "./reportWebVitals";
 
 const root = ReactDOM.createRoot(
@@ -14,6 +15,7 @@ root.render(
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/sync" element={<Sync />} />
+      <Route path="/vivek" element={<Vivek />} />
     </Routes>
   </BrowserRouter>,
 );

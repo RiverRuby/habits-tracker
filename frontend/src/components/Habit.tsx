@@ -8,7 +8,16 @@ import { HabitCube } from "./HabitCube";
 import { ConfirmModal } from "./modals/ConfirmModal";
 import { NaturalDateInput } from "./NaturalDateInput";
 
-export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
+interface HabitProps extends HabitType {
+  viewOnly?: boolean;
+}
+
+export const Habit: React.FC<HabitProps> = ({
+  id,
+  name,
+  completed,
+  viewOnly = false,
+}) => {
   const { deleteHabit, renameHabit, updateUserInfo } = useUser();
   const [habitName, setHabitName] = React.useState(name);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
@@ -60,6 +69,8 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
   }, []);
 
   const logDay = async (day: string) => {
+    if (viewOnly) return;
+
     await api.post("/habits/log", {
       id: id,
       day: day,
@@ -68,6 +79,8 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
   };
 
   const unlogDay = async (day: string) => {
+    if (viewOnly) return;
+
     await api.post("/habits/unlog", {
       id: id,
       day: day,
@@ -93,14 +106,14 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
   }, [last365Days]);
 
   const rename = async () => {
-    if (habitName === name) return;
+    if (viewOnly || habitName === name) return;
 
     await renameHabit(id, habitName);
   };
 
   return (
     <>
-      {showDeleteModal && (
+      {!viewOnly && showDeleteModal && (
         <ConfirmModal
           description="Deleted habits can't be recovered"
           onCancel={() => setShowDeleteModal(false)}
@@ -111,7 +124,7 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
         />
       )}
 
-      {showNaturalDateInput && (
+      {!viewOnly && showNaturalDateInput && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
           <NaturalDateInput
             habitId={id}
@@ -138,23 +151,27 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
                 {habitName || " "}
               </span>
 
-              <input
-                ref={inputRef}
-                value={habitName}
-                onChange={(e) => setHabitName(e.target.value)}
-                className="bg-transparent text-xl font-bold outline-none"
-                style={{ minWidth: "1ch" }}
-                onBlur={rename}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    e.stopPropagation();
+              {viewOnly ? (
+                <span className="text-xl font-bold">{habitName}</span>
+              ) : (
+                <input
+                  ref={inputRef}
+                  value={habitName}
+                  onChange={(e) => setHabitName(e.target.value)}
+                  className="bg-transparent text-xl font-bold outline-none"
+                  style={{ minWidth: "1ch" }}
+                  onBlur={rename}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      e.stopPropagation();
 
-                    rename();
-                    inputRef.current?.blur();
-                  }
-                }}
-              />
+                      rename();
+                      inputRef.current?.blur();
+                    }
+                  }}
+                />
+              )}
             </div>
 
             <div
@@ -170,21 +187,23 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              className="min-w-fit cursor-pointer p-2 duration-100 group-hover:opacity-100 md:opacity-0"
-              onClick={() => setShowNaturalDateInput(true)}
-            >
-              <CalendarPlus className="text-blue-500 size-5" />
-            </button>
+          {!viewOnly && (
+            <div className="flex gap-2">
+              <button
+                className="min-w-fit cursor-pointer p-2 duration-100 group-hover:opacity-100 md:opacity-0"
+                onClick={() => setShowNaturalDateInput(true)}
+              >
+                <CalendarPlus className="text-blue-500 size-5" />
+              </button>
 
-            <button
-              className="min-w-fit cursor-pointer p-2 duration-100 group-hover:opacity-100 md:opacity-0"
-              onClick={() => setShowDeleteModal(true)}
-            >
-              <Trash className="size-5 text-red-500" />
-            </button>
-          </div>
+              <button
+                className="min-w-fit cursor-pointer p-2 duration-100 group-hover:opacity-100 md:opacity-0"
+                onClick={() => setShowDeleteModal(true)}
+              >
+                <Trash className="size-5 text-red-500" />
+              </button>
+            </div>
+          )}
         </div>
 
         <div
@@ -220,6 +239,7 @@ export const Habit: React.FC<HabitType> = ({ id, name, completed }) => {
                 last365Days={last365Days}
                 logDay={logDay}
                 unlogDay={unlogDay}
+                viewOnly={viewOnly}
               />
             ))}
           </div>

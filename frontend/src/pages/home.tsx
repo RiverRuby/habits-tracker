@@ -1,13 +1,15 @@
-import { Plus } from "lucide-react";
+import { Mic, Plus } from "lucide-react";
 import React from "react";
 import { Habit } from "../components/Habit";
 import { CreateModal } from "../components/modals/CreateModal";
+import { VoiceInputModal } from "../components/modals/VoiceInputModal";
 import { Page } from "../components/Page";
 import { useUser } from "../state/user";
 
 export default function Home() {
   const { habits, updateUserInfo } = useUser();
   const [showCreateModal, setShowCreateModal] = React.useState(false);
+  const [showVoiceModal, setShowVoiceModal] = React.useState(false);
 
   React.useEffect(() => {
     updateUserInfo();
@@ -19,20 +21,29 @@ export default function Home() {
         <CreateModal onClose={() => setShowCreateModal(false)} />
       )}
 
+      {showVoiceModal && (
+        <VoiceInputModal onClose={() => setShowVoiceModal(false)} />
+      )}
+
       <Page>
         <div className="flex flex-col gap-2 text-center">
           <h1 className="text-6xl font-bold">habits</h1>
           <h2 className="text-light-gray">Track your habits every day</h2>
         </div>
 
-        <div className="flex w-full max-w-full flex-col gap-2 md:max-w-[750px]">
-          {habits?.map((habit) => <Habit key={habit.id} {...habit} />)}
-
+        <div className="flex w-full max-w-full flex-col gap-4 md:max-w-[750px]">
           <button
-            className="flex h-24 w-full items-center justify-center gap-2 rounded-lg bg-gray text-xl font-bold duration-100 hover:bg-opacity-80"
+            className="flex h-16 w-full items-center justify-center gap-2 rounded-lg bg-gray text-xl font-bold duration-100 hover:bg-opacity-80"
+            onClick={() => setShowVoiceModal(true)}
+          >
+            <Mic className="size-6" /> Track with voice
+          </button>
+          {habits?.map((habit) => <Habit key={habit.id} {...habit} />)}
+          <button
+            className="flex h-16 w-full items-center justify-center gap-2 rounded-lg bg-gray text-xl font-bold duration-100 hover:bg-opacity-80"
             onClick={() => setShowCreateModal(true)}
           >
-            <Plus className="size-8" /> Create
+            <Plus className="size-8" /> Add new habit
           </button>
         </div>
       </Page>
