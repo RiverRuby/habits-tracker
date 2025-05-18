@@ -68,23 +68,29 @@ export const Habit: React.FC<HabitProps> = ({
     ref.current.scrollLeft = ref.current.scrollWidth;
   }, []);
 
-  const logDay = async (day: string) => {
-    if (viewOnly) return;
+  const logDay = async (day: string): Promise<void> => {
+    if (viewOnly) return Promise.resolve();
 
+    // First make the log API call
     await api.post("/habits/log", {
       id: id,
       day: day,
     });
+
+    // Finally update the user info
     await updateUserInfo();
   };
 
-  const unlogDay = async (day: string) => {
-    if (viewOnly) return;
+  const unlogDay = async (day: string): Promise<void> => {
+    if (viewOnly) return Promise.resolve();
 
+    // First make the unlog API call
     await api.post("/habits/unlog", {
       id: id,
       day: day,
     });
+
+    // Finally update the user info
     await updateUserInfo();
   };
 

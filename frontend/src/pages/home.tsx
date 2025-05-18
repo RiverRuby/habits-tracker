@@ -4,10 +4,11 @@ import { Habit } from "../components/Habit";
 import { CreateModal } from "../components/modals/CreateModal";
 import { VoiceInputModal } from "../components/modals/VoiceInputModal";
 import { Page } from "../components/Page";
+import { Spinner } from "../components/Spinner";
 import { useUser } from "../state/user";
 
 export default function Home() {
-  const { habits, updateUserInfo } = useUser();
+  const { habits, loaded, updateUserInfo } = useUser();
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [showVoiceModal, setShowVoiceModal] = React.useState(false);
 
@@ -38,7 +39,15 @@ export default function Home() {
           >
             <Mic className="size-6" /> Track with voice
           </button>
-          {habits?.map((habit) => <Habit key={habit.id} {...habit} />)}
+
+          {!loaded ? (
+            <div className="flex items-center justify-center py-10">
+              <Spinner size="large" />
+            </div>
+          ) : (
+            habits?.map((habit) => <Habit key={habit.id} {...habit} />)
+          )}
+
           <button
             className="flex h-16 w-full items-center justify-center gap-2 rounded-lg bg-gray text-xl font-bold duration-100 hover:bg-opacity-80"
             onClick={() => setShowCreateModal(true)}

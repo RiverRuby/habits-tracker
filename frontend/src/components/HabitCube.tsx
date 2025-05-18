@@ -9,8 +9,8 @@ interface Props {
   index: number;
   last365Days: string[];
   viewOnly?: boolean;
-  logDay: (day: string) => void;
-  unlogDay: (day: string) => void;
+  logDay: (day: string) => Promise<void>;
+  unlogDay: (day: string) => Promise<void>;
 }
 
 export const HabitCube: React.FC<Props> = ({
@@ -22,17 +22,37 @@ export const HabitCube: React.FC<Props> = ({
   unlogDay,
   viewOnly = false,
 }) => {
-  const [gotLogged, setGotLogged] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [showConfetti, setShowConfetti] = React.useState(false);
   const isFiller = day === "FILLER";
+  const isCompleted = completions.includes(day);
 
   React.useEffect(() => {
-    if (gotLogged) {
+    if (showConfetti) {
       // this is here to avoid lag caused by confetti
       setTimeout(() => {
-        setGotLogged(false);
+        setShowConfetti(false);
       }, 2000);
     }
-  }, [gotLogged]);
+  }, [showConfetti]);
+
+  const handleClick = async () => {
+    if (isFiller || viewOnly) return;
+
+    setIsLoading(true);
+
+    try {
+      if (isCompleted) {
+        await unlogDay(day);
+        setShowConfetti(false);
+      } else {
+        await logDay(day);
+        setShowConfetti(true);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div
@@ -40,29 +60,23 @@ export const HabitCube: React.FC<Props> = ({
       data-tooltip-id={day}
       data-tooltip-content={day}
       className={classNames(
-        "size-4 rounded-sm border-[1px] border-transparent",
+        "relative size-4 rounded-sm border-[1px] border-transparent",
         {
           "cursor-pointer": !viewOnly && !isFiller,
           "bg-gray hover:bg-light-gray":
-            !isFiller && !completions.includes(day),
-          "bg-green-500": completions.includes(day),
+            !isFiller && !isCompleted && !isLoading,
+          "bg-green-500": isCompleted && !isLoading,
           "border-white": index === last365Days.length - 1,
           "opacity-30": isFiller,
+          "animate-pulse bg-green-400": isLoading && !isCompleted,
+          "animate-pulse bg-green-500": isLoading && isCompleted,
         },
       )}
-      onClick={() => {
-        if (isFiller || viewOnly) return;
-
-        if (completions.includes(day)) {
-          unlogDay(day);
-          setGotLogged(false);
-        } else {
-          logDay(day);
-          setGotLogged(true);
-        }
-      }}
+      onClick={handleClick}
     >
-      {gotLogged && <ConfettiExplosion particleCount={50} />}
+      {showConfetti && (
+        <ConfettiExplosion particleCount={150} duration={2000} force={0.8} />
+      )}
       {day !== "FILLER" && <Tooltip id={day} />}
     </div>
   );
