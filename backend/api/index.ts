@@ -3,7 +3,6 @@ import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 import { nanoid } from "nanoid";
 import { GoogleGenAI } from "@google/genai";
-import { constants } from "buffer";
 
 const app = express();
 const prisma = new PrismaClient();
