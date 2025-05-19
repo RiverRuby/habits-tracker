@@ -28,8 +28,8 @@ export default function Home() {
 
       <Page>
         <div className="flex flex-col gap-2 text-center">
-          <h1 className="text-6xl font-bold">Habits</h1>
-          <h2 className="text-light-gray">Track your habits every day</h2>
+          <h1 className="text-6xl font-bold">habits</h1>
+          <h2 className="text-light-gray">track your habits every day</h2>
         </div>
 
         <div className="flex w-full max-w-full flex-col gap-4 md:max-w-[750px]">
