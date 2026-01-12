@@ -1,25 +1,12 @@
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import "react-tooltip/dist/react-tooltip.css";
-import "./index.css";
-import Home from "./pages/home";
-import Sync from "./pages/sync";
-import Vivek from "./pages/vivek";
+import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
 );
-root.render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/sync" element={<Sync />} />
-      <Route path="/vivek" element={<Vivek />} />
-    </Routes>
-  </BrowserRouter>,
-);
+root.render(<App />);
 
 // Register service worker for PWA capabilities
 serviceWorkerRegistration.register();

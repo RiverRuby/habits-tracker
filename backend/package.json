@@ -10,11 +10,13 @@
     "postinstall": "prisma migrate deploy && prisma generate"
   },
   "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.30.0",
     "@google/genai": "^0.8.0",
     "@prisma/client": "^5.7.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "nanoid": "^3.3.6"
+    "nanoid": "^3.3.6",
+    "telnyx": "^4.6.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

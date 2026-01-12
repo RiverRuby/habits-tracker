@@ -3,6 +3,10 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        'space': ['"Space Grotesk"', 'sans-serif'],
+        'lexend': ['Lexend', 'sans-serif'],
+      },
       colors: {
         black: "#0F1014",
         "dark-gray": "#1B1C1F",

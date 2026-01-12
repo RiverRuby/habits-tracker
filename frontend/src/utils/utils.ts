@@ -53,8 +53,24 @@ export const syncCode = (code: string) => {
 };
 
 export const parseDate = (dateStr: string): Date => {
-  const [_, day, month, year] = dateStr.split(" ");
-  const parsedDate = new Date(`${day} ${month} ${year}`);
+  // Handle both formats:
+  // Classic: "Wed, 8 Jan, 2026" (weekday, day month, year)
+  // DB: "07 Jan 2026" (day month year)
+  const parts = dateStr.split(" ");
+
+  let parsedDate: Date;
+  if (parts.length === 4) {
+    // Classic format: "Wed, 8 Jan, 2026"
+    const [_, day, month, year] = parts;
+    parsedDate = new Date(`${day} ${month} ${year}`);
+  } else if (parts.length === 3) {
+    // DB format: "07 Jan 2026"
+    const [day, month, year] = parts;
+    parsedDate = new Date(`${day} ${month} ${year}`);
+  } else {
+    throw new Error(`Invalid date format: ${dateStr}`);
+  }
+
   if (isNaN(parsedDate.getTime())) {
     throw new Error(`Invalid date format: ${dateStr}`);
   }
