@@ -218,10 +218,31 @@ const NewDesignApp: React.FC = () => {
   // Show loading state
   if (!loaded) {
     return (
-      <div className="fixed inset-0 w-full h-full bg-[#E5E5E5] flex items-center justify-center font-space">
-        <div className="border-4 border-black p-6 bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <p className="text-xl font-bold">LOADING...</p>
+      <div className="fixed inset-0 w-full h-full bg-[#E5E5E5] flex flex-col items-center justify-center font-space">
+        {/* Logo/Branding */}
+        <div className="border-4 border-black p-4 md:p-6 bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-8">
+          <h1 className="text-2xl md:text-4xl font-black leading-none tracking-tight">Habit Tracker</h1>
+          <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
+            <span>Vivek</span>
+          </div>
         </div>
+
+        {/* Loading animation */}
+        <div className="flex items-center gap-3">
+          <div className="flex gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-4 h-4 bg-black animate-bounce"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              />
+            ))}
+          </div>
+        </div>
+
+        <p className="mt-6 text-sm font-bold uppercase tracking-widest text-gray-500">
+          Loading your habits...
+        </p>
       </div>
     );
   }
