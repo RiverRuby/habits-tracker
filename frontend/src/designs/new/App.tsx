@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Plus, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, RotateCcw, Calendar, Layers, Settings } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Plus, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, CalendarDays, Layers, Phone, Archive, Key } from 'lucide-react';
 import HabitCard from './components/HabitCard';
 import NewHabitModal from './components/NewHabitModal';
 import SettingsModal from './components/SettingsModal';
 import HabitDetailsModal from './components/HabitDetailsModal';
+import ManageHabitsModal from './components/ManageHabitsModal';
+import SyncKeyModal from './components/SyncKeyModal';
 import Button from './components/Button';
 import { ThemeColor } from './types';
 import { useUser, useNewDesignHabits, NewDesignHabit, ThemeColor as StoreThemeColor } from '../../state/user';
@@ -12,8 +14,14 @@ import YearlyCalendarView from './components/YearlyCalendarView';
 
 const NewDesignApp: React.FC = () => {
   const { loaded, createHabit, logHabit, unlogHabit, updateUserInfo } = useUser();
-  const habits = useNewDesignHabits();
-  const { view, toggleView, toggleDesign } = useDesign();
+  const allHabits = useNewDesignHabits();
+  const { view, toggleView, toggleDesign, hiddenHabits } = useDesign();
+
+  // Filter visible habits for the carousel
+  const habits = useMemo(() =>
+    allHabits.filter(h => !hiddenHabits.includes(h.id)),
+    [allHabits, hiddenHabits]
+  );
 
   const [rotation, setRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -21,6 +29,8 @@ const NewDesignApp: React.FC = () => {
   const [startRotation, setStartRotation] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isManageOpen, setIsManageOpen] = useState(false);
+  const [isSyncKeyOpen, setIsSyncKeyOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<NewDesignHabit | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -148,6 +158,7 @@ const NewDesignApp: React.FC = () => {
 
   // --- Rendering Calculations ---
 
+  // Calculate render items without sorting to prevent DOM reordering during animation
   const renderItems = habits.map((habit, index) => {
       const itemAngleBase = index * PER_ITEM_ANGLE;
       const netAngleDeg = itemAngleBase + rotation;
@@ -186,7 +197,8 @@ const NewDesignApp: React.FC = () => {
       };
   });
 
-  renderItems.sort((a, b) => (a.style.zIndex as number) - (b.style.zIndex as number));
+  // Note: Removed sorting to prevent DOM reordering during animation
+  // z-index in CSS handles the visual stacking correctly
 
   // Show loading state
   if (!loaded) {
@@ -206,32 +218,35 @@ const NewDesignApp: React.FC = () => {
         {/* Header */}
         <header className="flex justify-between items-start p-4 md:p-6 z-[3000] relative pointer-events-auto shrink-0">
           <div className="border-4 border-black p-2 md:p-3 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">DAILY<br/>PUNCH.</h1>
-              <div className="text-[0.6rem] font-bold mt-1 tracking-widest flex justify-between items-center border-t-2 border-black pt-1">
-                  <span>CALENDAR</span>
-                  <span className="bg-black text-white px-1 text-[0.5rem]">V.3.1</span>
+              <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">Habit Tracker</h1>
+              <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
+                  <span>Vivek</span>
               </div>
           </div>
 
           <div className="flex gap-2 md:gap-4">
-            <Button onClick={toggleView} variant="icon" title="Habits View" className="w-10 h-10 md:w-auto md:h-auto">
+            <Button onClick={toggleView} variant="icon" title="Habits" className="w-10 h-10 md:w-auto md:h-auto">
               <Layers size={18} />
             </Button>
-            <Button onClick={() => setIsSettingsOpen(true)} variant="icon" title="Settings" className="w-10 h-10 md:w-auto md:h-auto">
-              <Settings size={18} />
+            <Button onClick={() => setIsSyncKeyOpen(true)} variant="icon" title="Sync Key" className="w-10 h-10 md:w-auto md:h-auto">
+              <Key size={18} />
             </Button>
-            <Button onClick={toggleDesign} variant="icon" title="Classic Design" className="w-10 h-10 md:w-auto md:h-auto text-[0.6rem] font-bold">
-              OLD
+            <Button onClick={() => setIsSettingsOpen(true)} variant="icon" title="Call Settings" className="w-10 h-10 md:w-auto md:h-auto">
+              <Phone size={18} />
+            </Button>
+            <Button onClick={toggleDesign} variant="icon" title="Archive" className="w-10 h-10 md:w-auto md:h-auto">
+              <Archive size={18} />
             </Button>
           </div>
         </header>
 
         {/* Calendar View */}
         <main className="flex-1 overflow-auto p-4 md:p-6">
-          <YearlyCalendarView habits={habits} onToggleDay={toggleHabitDay} />
+          <YearlyCalendarView habits={allHabits} onToggleDay={toggleHabitDay} />
         </main>
 
         <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+        <SyncKeyModal isOpen={isSyncKeyOpen} onClose={() => setIsSyncKeyOpen(false)} />
       </div>
     );
   }
@@ -242,28 +257,30 @@ const NewDesignApp: React.FC = () => {
       {/* Header */}
       <header className="flex justify-between items-start p-4 md:p-6 z-[3000] relative pointer-events-auto shrink-0">
         <div className="border-4 border-black p-2 md:p-3 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">DAILY<br/>PUNCH.</h1>
-            <div className="text-[0.6rem] font-bold mt-1 tracking-widest flex justify-between items-center border-t-2 border-black pt-1">
-                <span>{isMobile ? 'ROLODEX' : 'CAROUSEL'}</span>
-                <span className="bg-black text-white px-1 text-[0.5rem]">V.3.1</span>
+            <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">Habit Tracker</h1>
+            <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
+                <span>Vivek</span>
             </div>
         </div>
 
         <div className="flex gap-2 md:gap-4">
-            <Button onClick={toggleView} variant="icon" title="Calendar View" className="w-10 h-10 md:w-auto md:h-auto">
-              <Calendar size={18} />
+            <Button onClick={toggleView} variant="icon" title="Annual" className="w-10 h-10 md:w-auto md:h-auto">
+              <CalendarDays size={18} />
             </Button>
-            <Button onClick={() => setIsSettingsOpen(true)} variant="icon" title="Settings" className="w-10 h-10 md:w-auto md:h-auto">
-              <Settings size={18} />
+            <Button onClick={() => setIsSyncKeyOpen(true)} variant="icon" title="Sync Key" className="w-10 h-10 md:w-auto md:h-auto">
+              <Key size={18} />
             </Button>
-            <Button onClick={toggleDesign} variant="icon" title="Classic Design" className="w-10 h-10 md:w-auto md:h-auto text-[0.6rem] font-bold">
-              OLD
+            <Button onClick={() => setIsSettingsOpen(true)} variant="icon" title="Call Settings" className="w-10 h-10 md:w-auto md:h-auto">
+              <Phone size={18} />
             </Button>
-             <Button onClick={() => setRotation(0)} variant="icon" title="Reset View" className="w-10 h-10 md:w-auto md:h-auto">
-                <RotateCcw size={18} />
+            <Button onClick={toggleDesign} variant="icon" title="Archive" className="w-10 h-10 md:w-auto md:h-auto">
+              <Archive size={18} />
+            </Button>
+            <Button onClick={() => setIsManageOpen(true)} variant="icon" title="Manage Habits" className="w-10 h-10 md:w-auto md:h-auto">
+              <Layers size={18} />
             </Button>
             <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 text-sm md:text-base px-3 py-2 md:px-6">
-                <Plus size={16} strokeWidth={3} /> {isMobile ? 'NEW' : 'NEW HABIT'}
+              <Plus size={16} strokeWidth={3} /> {isMobile ? 'NEW' : 'NEW HABIT'}
             </Button>
         </div>
       </header>
@@ -328,9 +345,9 @@ const NewDesignApp: React.FC = () => {
                     pointer-events-auto rounded-full shadow-lg bg-white border-2 border-black
                     ${isMobile ? 'w-14 h-14' : 'w-16 h-16'}
                 `}
-                onClick={() => setRotation(r => r + PER_ITEM_ANGLE)}
+                onClick={() => setRotation(r => r - PER_ITEM_ANGLE)}
             >
-                {isMobile ? <ArrowUp size={24} strokeWidth={3} /> : <ArrowRight size={24} strokeWidth={3} />}
+                {isMobile ? <ArrowUp size={24} strokeWidth={3} /> : <ArrowLeft size={24} strokeWidth={3} />}
             </Button>
             <Button
                 variant="icon"
@@ -338,9 +355,9 @@ const NewDesignApp: React.FC = () => {
                     pointer-events-auto rounded-full shadow-lg bg-white border-2 border-black
                     ${isMobile ? 'w-14 h-14' : 'w-16 h-16'}
                 `}
-                onClick={() => setRotation(r => r - PER_ITEM_ANGLE)}
+                onClick={() => setRotation(r => r + PER_ITEM_ANGLE)}
             >
-                {isMobile ? <ArrowDown size={24} strokeWidth={3} /> : <ArrowLeft size={24} strokeWidth={3} />}
+                {isMobile ? <ArrowDown size={24} strokeWidth={3} /> : <ArrowRight size={24} strokeWidth={3} />}
             </Button>
       </div>
 
@@ -360,6 +377,17 @@ const NewDesignApp: React.FC = () => {
         onClose={() => setEditingHabit(null)}
         habit={editingHabit}
         onUpdate={updateUserInfo}
+      />
+
+      <ManageHabitsModal
+        isOpen={isManageOpen}
+        onClose={() => setIsManageOpen(false)}
+        habits={allHabits}
+      />
+
+      <SyncKeyModal
+        isOpen={isSyncKeyOpen}
+        onClose={() => setIsSyncKeyOpen(false)}
       />
 
     </div>

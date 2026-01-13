@@ -23,15 +23,29 @@ export function dbDateToISO(dbDate: string): string {
  * "2026-01-08" -> "08 Jan 2026"
  */
 export function isoToDbDate(isoDate: string): string {
-  const d = new Date(isoDate);
+  // Parse the ISO date string directly to avoid timezone issues
+  // "2026-01-08" -> parts[0]=2026, parts[1]=01, parts[2]=08
+  const parts = isoDate.split('-');
+  if (parts.length !== 3) {
+    console.warn(`Invalid date format: ${isoDate}`);
+    return isoDate;
+  }
+
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1; // 0-indexed
+  const day = parseInt(parts[2], 10);
+
+  // Create date using local timezone to avoid UTC conversion issues
+  const d = new Date(year, month, day);
   if (isNaN(d.getTime())) {
     console.warn(`Invalid date: ${isoDate}`);
     return isoDate;
   }
-  const day = d.getDate().toString().padStart(2, '0');
-  const month = d.toLocaleDateString('en-US', { month: 'short' });
-  const year = d.getFullYear();
-  return `${day} ${month} ${year}`;
+
+  const dayStr = d.getDate().toString().padStart(2, '0');
+  const monthStr = d.toLocaleDateString('en-US', { month: 'short' });
+  const yearStr = d.getFullYear();
+  return `${dayStr} ${monthStr} ${yearStr}`;
 }
 
 /**
