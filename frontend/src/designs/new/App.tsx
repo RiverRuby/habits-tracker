@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Plus, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, CalendarDays, Layers, Phone, Archive, Key } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, CalendarDays, Layers, Phone, Archive, Key, ChevronDown } from 'lucide-react';
 import HabitCard from './components/HabitCard';
 import NewHabitModal from './components/NewHabitModal';
 import SettingsModal from './components/SettingsModal';
@@ -33,6 +33,7 @@ const NewDesignApp: React.FC = () => {
   const [isSyncKeyOpen, setIsSyncKeyOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<NewDesignHabit | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isHabitSelectorOpen, setIsHabitSelectorOpen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -137,6 +138,20 @@ const NewDesignApp: React.FC = () => {
         setRotation(-((newCount - 1) * newAngleSpacing));
     }, 100);
   };
+
+  // Navigate to a specific habit by index
+  const goToHabit = (index: number) => {
+    const targetRotation = -(index * PER_ITEM_ANGLE);
+    setRotation(targetRotation);
+    setIsHabitSelectorOpen(false);
+  };
+
+  // Get current active habit index based on rotation
+  const currentHabitIndex = useMemo(() => {
+    if (habits.length === 0) return -1;
+    const normalizedRotation = (((-rotation % 360) + 360) % 360);
+    return Math.round(normalizedRotation / PER_ITEM_ANGLE) % habits.length;
+  }, [rotation, habits.length, PER_ITEM_ANGLE]);
 
   const toggleHabitDay = (habitId: string, date: string) => {
     const habit = habits.find(h => h.id === habitId);
@@ -256,11 +271,54 @@ const NewDesignApp: React.FC = () => {
 
       {/* Header */}
       <header className="flex justify-between items-start p-4 md:p-6 z-[3000] relative pointer-events-auto shrink-0">
-        <div className="border-4 border-black p-2 md:p-3 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">Habit Tracker</h1>
-            <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
-                <span>Vivek</span>
+        <div className="relative">
+          <div className="border-4 border-black p-2 md:p-3 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">Habit Tracker</h1>
+              <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
+                  <span>Vivek</span>
+              </div>
+          </div>
+
+          {/* Habit Selector Dropdown */}
+          {habits.length > 0 && (
+            <div className="mt-2">
+              <button
+                onClick={() => setIsHabitSelectorOpen(!isHabitSelectorOpen)}
+                className="flex items-center gap-2 px-3 py-2 bg-white border-2 border-black text-sm font-bold uppercase hover:bg-black hover:text-white transition-colors w-full justify-between shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              >
+                <span className="truncate">
+                  {habits[currentHabitIndex]?.emoji && `${habits[currentHabitIndex].emoji} `}
+                  {habits[currentHabitIndex]?.title || 'Select Habit'}
+                </span>
+                <ChevronDown size={16} className={`transition-transform ${isHabitSelectorOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isHabitSelectorOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-[2999]"
+                    onClick={() => setIsHabitSelectorOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-[3001] max-h-60 overflow-y-auto">
+                    {habits.map((habit, index) => (
+                      <button
+                        key={habit.id}
+                        onClick={() => goToHabit(index)}
+                        className={`
+                          w-full px-3 py-2 text-left text-sm font-bold uppercase border-b border-gray-200 last:border-0
+                          hover:bg-black hover:text-white transition-colors flex items-center gap-2
+                          ${index === currentHabitIndex ? 'bg-black text-white' : ''}
+                        `}
+                      >
+                        {habit.emoji && <span>{habit.emoji}</span>}
+                        <span className="truncate">{habit.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
+          )}
         </div>
 
         <div className="flex gap-2 md:gap-4">

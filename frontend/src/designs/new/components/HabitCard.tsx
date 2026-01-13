@@ -67,6 +67,35 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
     return dates;
   }, []);
 
+  // Calculate count based on view mode
+  const viewCount = useMemo(() => {
+    if (viewMode === 'WEEK') {
+      // Count completed days in current week
+      return weekDates.filter(d => habit.history[formatDate(d)]).length;
+    } else if (viewMode === 'MONTH') {
+      // Count completed days in current month
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
+      let count = 0;
+      for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
+        const dateStr = formatDate(new Date(year, month, day));
+        if (habit.history[dateStr]) count++;
+      }
+      return count;
+    } else {
+      // Count completed days in last 52 weeks (YEAR view)
+      return Object.values(habit.history).filter(Boolean).length;
+    }
+  }, [viewMode, weekDates, habit.history]);
+
+  // Label for the count
+  const viewLabel = useMemo(() => {
+    if (viewMode === 'WEEK') return 'This Week';
+    if (viewMode === 'MONTH') return 'This Month';
+    return 'This Year';
+  }, [viewMode]);
+
   // Month View: Days in current month + padding
   const monthData = useMemo(() => {
       const today = new Date();
@@ -232,18 +261,23 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
           p-6 border-b-2 flex justify-between items-start relative overflow-hidden transition-colors
           ${isActive ? 'border-black' : 'border-gray-200'}
       `}>
-        <div className="z-10 relative max-w-[70%]">
-          <h2 className={`
-              text-3xl font-black leading-none uppercase tracking-tighter break-words hyphens-auto transition-colors
-              ${isActive ? 'text-black' : 'text-gray-300'}
-          `}>
-            {habit.title}
-          </h2>
+        <div className="z-10 relative max-w-[60%]">
+          <div className="flex items-center gap-2">
+            {habit.emoji && (
+              <span className={`text-3xl ${isActive ? '' : 'opacity-30'}`}>{habit.emoji}</span>
+            )}
+            <h2 className={`
+                text-3xl font-black leading-none uppercase tracking-tighter break-words hyphens-auto transition-colors
+                ${isActive ? 'text-black' : 'text-gray-300'}
+            `}>
+              {habit.title}
+            </h2>
+          </div>
           <div className={`mt-2 text-xs font-bold uppercase tracking-widest transition-opacity ${isActive ? 'opacity-60' : 'opacity-30 text-gray-300'}`}>
-            Streak
+            {isActive ? viewLabel : 'Streak'}
           </div>
         </div>
-        
+
         <div className={`flex flex-col items-end z-10 ${isActive ? 'text-black' : 'text-gray-300'}`}>
             <div className="flex items-center gap-2">
               {isActive && onEditDetails && (
@@ -258,11 +292,8 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
                   <MoreHorizontal size={20} />
                 </button>
               )}
-              <span className="text-5xl font-black leading-none">{habit.streak}</span>
+              <span className="text-5xl font-black leading-none">{isActive ? viewCount : habit.streak}</span>
             </div>
-            {habit.emoji && (
-              <span className="text-2xl mt-1">{habit.emoji}</span>
-            )}
         </div>
 
         {/* AI Tip Overlay (Only on Active) */}

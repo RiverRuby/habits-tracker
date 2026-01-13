@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Pencil, Save, MessageSquare } from 'lucide-react';
+import { X, Pencil, Save, MessageSquare, Palette } from 'lucide-react';
 import Button from './Button';
 import { api } from '../../../utils/api';
-import { NewDesignHabit } from '../../../state/user';
+import { NewDesignHabit, ThemeColor } from '../../../state/user';
+import { THEME_STYLES } from '../types';
 
 interface HabitDetailsModalProps {
   isOpen: boolean;
@@ -10,6 +11,14 @@ interface HabitDetailsModalProps {
   habit: NewDesignHabit | null;
   onUpdate?: () => void;
 }
+
+// Available theme colors
+const THEME_OPTIONS: { value: ThemeColor; label: string }[] = [
+  { value: 'ORANGE', label: 'Orange' },
+  { value: 'BLUE', label: 'Blue' },
+  { value: 'GREEN', label: 'Green' },
+  { value: 'YELLOW', label: 'Yellow' },
+];
 
 // Common emoji options for quick selection
 const EMOJI_OPTIONS = [
@@ -25,6 +34,7 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
 }) => {
   const [description, setDescription] = useState('');
   const [emoji, setEmoji] = useState('');
+  const [theme, setTheme] = useState<ThemeColor>('ORANGE');
   const [saving, setSaving] = useState(false);
   const [todayNotes, setTodayNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
@@ -36,6 +46,7 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
     if (isOpen && habit) {
       setDescription(habit.description || '');
       setEmoji(habit.emoji || '');
+      setTheme(habit.theme || 'ORANGE');
       // Load today's notes if available
       const todayStr = getTodayISO();
       const completion = habit.completionDetails?.find(c => {
@@ -52,11 +63,22 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
 
     try {
       setSaving(true);
+
+      // Save details (emoji, description)
       await api.post('/habits/update-details', {
-        habitId: habit.id,
+        id: habit.id,
         description: description || null,
         emoji: emoji || null,
       });
+
+      // Save theme if changed
+      if (theme !== habit.theme) {
+        await api.post('/habits/update-theme', {
+          id: habit.id,
+          theme: theme,
+        });
+      }
+
       onUpdate?.();
       onClose();
     } catch (error) {
@@ -113,6 +135,35 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
 
         {/* Content */}
         <div className="p-4 space-y-6">
+          {/* Color Selection */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 font-bold text-sm uppercase">
+              <Palette size={14} />
+              COLOR
+            </label>
+            <div className="flex gap-2">
+              {THEME_OPTIONS.map((option) => {
+                const styles = THEME_STYLES[option.value];
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => setTheme(option.value)}
+                    className={`
+                      flex-1 h-12 border-2 transition-all flex items-center justify-center font-bold text-xs uppercase
+                      ${styles.bg}
+                      ${theme === option.value
+                        ? 'border-black ring-2 ring-black ring-offset-2 scale-105'
+                        : 'border-black/30 hover:border-black'}
+                    `}
+                    title={option.label}
+                  >
+                    {theme === option.value && '✓'}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Emoji Selection */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 font-bold text-sm uppercase">
