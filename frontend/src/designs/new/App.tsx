@@ -34,6 +34,8 @@ const NewDesignApp: React.FC = () => {
   const [editingHabit, setEditingHabit] = useState<NewDesignHabit | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isHabitSelectorOpen, setIsHabitSelectorOpen] = useState(false);
+  const [userName, setUserName] = useState(() => localStorage.getItem('userName') || '');
+  const [isNewUser, setIsNewUser] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -43,6 +45,24 @@ const NewDesignApp: React.FC = () => {
       updateUserInfo();
     }
   }, [loaded, updateUserInfo]);
+
+  // Check if new user (no sync key) and open modal
+  useEffect(() => {
+    const syncKey = localStorage.getItem('ID');
+    if (!syncKey) {
+      setIsNewUser(true);
+      setIsSyncKeyOpen(true);
+    }
+  }, []);
+
+  // Listen for storage changes to update userName
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUserName(localStorage.getItem('userName') || '');
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Responsive Detection
   useEffect(() => {
@@ -223,7 +243,7 @@ const NewDesignApp: React.FC = () => {
         <div className="border-4 border-black p-4 md:p-6 bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-8">
           <h1 className="text-2xl md:text-4xl font-black leading-none tracking-tight">Habit Tracker</h1>
           <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
-            <span>Vivek</span>
+            <span>{userName || 'You'}</span>
           </div>
         </div>
 
@@ -256,7 +276,7 @@ const NewDesignApp: React.FC = () => {
           <div className="border-4 border-black p-2 md:p-3 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">Habit Tracker</h1>
               <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
-                  <span>Vivek</span>
+                  <span>{userName || 'You'}</span>
               </div>
           </div>
 
@@ -282,7 +302,7 @@ const NewDesignApp: React.FC = () => {
         </main>
 
         <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-        <SyncKeyModal isOpen={isSyncKeyOpen} onClose={() => setIsSyncKeyOpen(false)} />
+        <SyncKeyModal isOpen={isSyncKeyOpen} onClose={() => { setIsSyncKeyOpen(false); setIsNewUser(false); }} isNewUser={isNewUser} />
       </div>
     );
   }
@@ -296,7 +316,7 @@ const NewDesignApp: React.FC = () => {
           <div className="border-4 border-black p-2 md:p-3 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">Habit Tracker</h1>
               <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
-                  <span>Vivek</span>
+                  <span>{userName || 'You'}</span>
               </div>
           </div>
 
@@ -466,7 +486,8 @@ const NewDesignApp: React.FC = () => {
 
       <SyncKeyModal
         isOpen={isSyncKeyOpen}
-        onClose={() => setIsSyncKeyOpen(false)}
+        onClose={() => { setIsSyncKeyOpen(false); setIsNewUser(false); }}
+        isNewUser={isNewUser}
       />
 
     </div>
