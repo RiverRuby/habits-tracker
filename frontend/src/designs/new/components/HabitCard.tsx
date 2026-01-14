@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { THEME_STYLES, WEEK_DAYS } from '../types';
 import { NewDesignHabit } from '../../../state/user';
-import { Bot, MoreHorizontal, Trash2, Send } from 'lucide-react';
+import { MoreHorizontal, Trash2, Send } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { getHabitMotivation } from '../services/geminiService';
 import { api } from '../../../utils/api';
+import { dbDateToISO, isoToDbDate } from '../../../shared/dateUtils';
 
 interface HabitCardProps {
   habit: NewDesignHabit;
@@ -18,8 +18,6 @@ type ViewMode = 'MONTH' | 'YEAR';
 
 const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onEditDetails, onUpdate }) => {
   const styles = THEME_STYLES[habit.theme];
-  const [aiMessage, setAiMessage] = useState<string | null>(null);
-  const [loadingAi, setLoadingAi] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('MONTH');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState('');
@@ -40,8 +38,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
   useEffect(() => {
     if (selectedDate && habit.completionDetails) {
       const completion = habit.completionDetails.find(c => {
-        const parsed = new Date(c.day);
-        return parsed.toISOString().split('T')[0] === selectedDate;
+        return dbDateToISO(c.day) === selectedDate;
       });
       setNoteInput(completion?.notes || '');
     } else {
@@ -77,13 +74,8 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
 
     try {
       setSavingNote(true);
-      // Convert to DB format: "DD MMM YYYY"
-      const date = new Date(selectedDate);
-      const dbFormat = date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      });
+      // Convert to DB format: "DD MMM YYYY" using utility to avoid timezone issues
+      const dbFormat = isoToDbDate(selectedDate);
 
       await api.post('/habits/add-notes', {
         habitId: habit.id,
@@ -111,36 +103,30 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
     setNoteInput('');
   };
 
-  const fetchAiTip = async (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (loadingAi) return;
-      setLoadingAi(true);
-      const msg = await getHabitMotivation(habit.title, habit.streak);
-      setAiMessage(msg);
-      setLoadingAi(false);
-      setTimeout(() => setAiMessage(null), 5000);
-  };
-
   // --- View Data Generators ---
 
-  // Calculate count based on view mode
+  // Calculate monthly count (used for both active and inactive cards)
+  const monthCount = useMemo(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    let count = 0;
+    for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
+      const dateStr = formatDate(new Date(year, month, day));
+      if (habit.history[dateStr]) count++;
+    }
+    return count;
+  }, [habit.history]);
+
+  // Calculate count based on view mode (for active card)
   const viewCount = useMemo(() => {
     if (viewMode === 'MONTH') {
-      // Count completed days in current month
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = today.getMonth();
-      let count = 0;
-      for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
-        const dateStr = formatDate(new Date(year, month, day));
-        if (habit.history[dateStr]) count++;
-      }
-      return count;
+      return monthCount;
     } else {
       // Count completed days in last 52 weeks (YEAR view)
       return Object.values(habit.history).filter(Boolean).length;
     }
-  }, [viewMode, habit.history]);
+  }, [viewMode, habit.history, monthCount]);
 
   // Label for the count
   const viewLabel = useMemo(() => {
@@ -331,7 +317,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
             </h2>
           </div>
           <div className={`mt-2 text-xs font-bold uppercase tracking-widest transition-opacity ${isActive ? 'opacity-60' : 'opacity-30 text-gray-300'}`}>
-            {isActive ? viewLabel : 'Streak'}
+            {isActive ? viewLabel : 'This Month'}
           </div>
         </div>
 
@@ -349,16 +335,10 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
                   <MoreHorizontal size={20} />
                 </button>
               )}
-              <span className="text-5xl font-black leading-none">{isActive ? viewCount : habit.streak}</span>
+              <span className="text-5xl font-black leading-none">{isActive ? viewCount : monthCount}</span>
             </div>
         </div>
 
-        {/* AI Tip Overlay (Only on Active) */}
-        {isActive && aiMessage && (
-            <div className="absolute inset-0 bg-black text-white p-4 flex items-center justify-center text-center font-bold text-lg uppercase animate-in slide-in-from-top duration-300 z-20">
-                {aiMessage}
-            </div>
-        )}
       </div>
 
       {/* Body / Content */}
@@ -382,16 +362,6 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
                         {mode}
                     </button>
                 ))}
-
-                <div className="flex-1" />
-
-                <button
-                    onClick={fetchAiTip}
-                    className="p-1 bg-black/10 hover:bg-black/20 rounded-full transition-colors group"
-                    title="Get AI Motivation"
-                >
-                    <Bot size={16} className={loadingAi ? "animate-pulse" : "group-hover:scale-110 transition-transform"} />
-                </button>
             </div>
         )}
 

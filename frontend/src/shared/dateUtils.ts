@@ -10,12 +10,18 @@
  * "08 Jan 2026" -> "2026-01-08"
  */
 export function dbDateToISO(dbDate: string): string {
-  const parsed = new Date(dbDate);
+  // Parse "08 Jan 2026" format safely without timezone issues
+  // Add noon time to avoid day boundary issues when converting
+  const parsed = new Date(dbDate + ' 12:00:00');
   if (isNaN(parsed.getTime())) {
     console.warn(`Invalid date: ${dbDate}`);
     return dbDate;
   }
-  return parsed.toISOString().split('T')[0];
+  // Use local date parts to avoid UTC conversion issues
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /**
