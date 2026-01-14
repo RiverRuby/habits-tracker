@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Pencil, Save, MessageSquare, Palette } from 'lucide-react';
+import { X, Pencil, Save, MessageSquare, Palette, Type } from 'lucide-react';
 import Button from './Button';
 import { api } from '../../../utils/api';
 import { NewDesignHabit, ThemeColor } from '../../../state/user';
@@ -32,6 +32,7 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
   habit,
   onUpdate
 }) => {
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [emoji, setEmoji] = useState('');
   const [theme, setTheme] = useState<ThemeColor>('ORANGE');
@@ -44,6 +45,7 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
 
   useEffect(() => {
     if (isOpen && habit) {
+      setTitle(habit.title || '');
       setDescription(habit.description || '');
       setEmoji(habit.emoji || '');
       setTheme(habit.theme || 'ORANGE');
@@ -63,6 +65,14 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
 
     try {
       setSaving(true);
+
+      // Rename habit if title changed
+      if (title.trim() && title.trim().toUpperCase() !== habit.title) {
+        await api.post('/habits/rename', {
+          id: habit.id,
+          name: title.trim().toUpperCase(),
+        });
+      }
 
       // Save details (emoji, description)
       await api.post('/habits/update-details', {
@@ -124,7 +134,7 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
       <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b-4 border-black">
-          <h2 className="text-xl font-black uppercase">{habit.title}</h2>
+          <h2 className="text-xl font-black uppercase">Edit Habit</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-black/10 rounded transition-colors"
@@ -135,6 +145,21 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
 
         {/* Content */}
         <div className="p-4 space-y-6">
+          {/* Habit Name */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 font-bold text-sm uppercase">
+              <Type size={14} />
+              HABIT NAME
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter habit name"
+              className="w-full p-3 border-2 border-black font-bold uppercase focus:outline-none focus:ring-2 focus:ring-black"
+            />
+          </div>
+
           {/* Color Selection */}
           <div className="space-y-2">
             <label className="flex items-center gap-2 font-bold text-sm uppercase">
