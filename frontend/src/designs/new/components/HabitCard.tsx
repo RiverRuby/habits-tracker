@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { THEME_STYLES, WEEK_DAYS } from '../types';
 import { NewDesignHabit } from '../../../state/user';
-import { MoreHorizontal, Trash2, Send } from 'lucide-react';
+import { MoreHorizontal, Trash2, Send, ChevronLeft, ChevronRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { api } from '../../../utils/api';
 import { dbDateToISO, isoToDbDate } from '../../../shared/dateUtils';
@@ -23,6 +23,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState('');
   const [savingNote, setSavingNote] = useState(false);
+  const [monthOffset, setMonthOffset] = useState(0); // 0 = current month, -1 = previous, etc.
   const noteInputRef = useRef<HTMLInputElement>(null);
 
   // Helper to get YYYY-MM-DD
@@ -106,18 +107,23 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
 
   // --- View Data Generators ---
 
-  // Calculate monthly count (used for both active and inactive cards)
-  const monthCount = useMemo(() => {
+  // Get the viewed month/year based on offset
+  const viewedMonth = useMemo(() => {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
+    return new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+  }, [monthOffset]);
+
+  // Calculate monthly count for the viewed month
+  const monthCount = useMemo(() => {
+    const year = viewedMonth.getFullYear();
+    const month = viewedMonth.getMonth();
     let count = 0;
     for (let day = 1; day <= new Date(year, month + 1, 0).getDate(); day++) {
       const dateStr = formatDate(new Date(year, month, day));
       if (habit.history[dateStr]) count++;
     }
     return count;
-  }, [habit.history]);
+  }, [habit.history, viewedMonth]);
 
   // Calculate count based on view mode (for active card)
   const viewCount = useMemo(() => {
@@ -131,18 +137,20 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
 
   // Label for the count
   const viewLabel = useMemo(() => {
-    if (viewMode === 'MONTH') return 'This Month';
+    if (viewMode === 'MONTH') {
+      if (monthOffset === 0) return 'This Month';
+      return viewedMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
     return 'This Year';
-  }, [viewMode]);
+  }, [viewMode, monthOffset, viewedMonth]);
 
-  // Month View: Days in current month + padding
+  // Month View: Days in viewed month + padding
   const monthData = useMemo(() => {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = today.getMonth();
+      const year = viewedMonth.getFullYear();
+      const month = viewedMonth.getMonth();
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
-      
+
       const dates = [];
       // Padding for start of week (Sunday start)
       for(let i=0; i<firstDay.getDay(); i++) {
@@ -153,7 +161,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
           dates.push(new Date(year, month, i));
       }
       return dates;
-  }, []);
+  }, [viewedMonth]);
 
   // Year View: Last 52 weeks (approx 364 days)
   const yearData = useMemo(() => {
@@ -317,8 +325,28 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
               {habit.title}
             </h2>
           </div>
-          <div className={`mt-2 text-xs font-bold uppercase tracking-widest transition-opacity ${isActive ? 'opacity-60' : 'opacity-30 text-gray-300'}`}>
-            {isActive ? viewLabel : 'This Month'}
+          <div className={`mt-2 flex items-center gap-1 ${isActive ? '' : 'opacity-30'}`}>
+            {isActive && viewMode === 'MONTH' && (
+              <button
+                onClick={() => setMonthOffset(o => o - 1)}
+                className="p-0.5 hover:bg-black/10 rounded transition-colors"
+                title="Previous month"
+              >
+                <ChevronLeft size={14} />
+              </button>
+            )}
+            <span className={`text-xs font-bold uppercase tracking-widest ${isActive ? 'opacity-60' : 'text-gray-300'}`}>
+              {isActive ? viewLabel : 'This Month'}
+            </span>
+            {isActive && viewMode === 'MONTH' && (
+              <button
+                onClick={() => setMonthOffset(o => o + 1)}
+                className="p-0.5 hover:bg-black/10 rounded transition-colors"
+                title="Next month"
+              >
+                <ChevronRight size={14} />
+              </button>
+            )}
           </div>
         </div>
 
