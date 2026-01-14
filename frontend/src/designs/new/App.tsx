@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Plus, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, CalendarDays, Layers, Phone, Archive, Key, ChevronDown } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, CalendarDays, Layers, Phone, Archive, Key, ChevronDown, LayoutGrid, GalleryHorizontalEnd } from 'lucide-react';
 import HabitCard from './components/HabitCard';
 import NewHabitModal from './components/NewHabitModal';
 import SettingsModal from './components/SettingsModal';
@@ -36,6 +36,7 @@ const NewDesignApp: React.FC = () => {
   const [isHabitSelectorOpen, setIsHabitSelectorOpen] = useState(false);
   const [userName, setUserName] = useState(() => localStorage.getItem('userName') || '');
   const [isNewUser, setIsNewUser] = useState(false);
+  const [displayMode, setDisplayMode] = useState<'carousel' | 'grid'>('carousel');
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -397,81 +398,136 @@ const NewDesignApp: React.FC = () => {
         </div>
       </header>
 
-      {/* Main 3D Scene */}
-      <main
-        className="flex-1 flex flex-col justify-center items-center relative perspective-[1200px] overflow-hidden cursor-grab active:cursor-grabbing"
-        onMouseDown={handlePointerDown}
-        onMouseMove={handlePointerMove}
-        onTouchStart={handlePointerDown}
-        onTouchMove={handlePointerMove}
-        onWheel={handleWheel}
-      >
-
-        {/* Carousel Container */}
-        <div
-            ref={containerRef}
-            className={`relative w-0 h-0 transform-style-3d ${isMobile ? '' : '-translate-y-20'}`}
-            style={{
-                transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
-            }}
+      {/* Main Content - Carousel or Grid */}
+      {displayMode === 'carousel' ? (
+        <main
+          className="flex-1 flex flex-col justify-center items-center relative perspective-[1200px] overflow-hidden cursor-grab active:cursor-grabbing"
+          onMouseDown={handlePointerDown}
+          onMouseMove={handlePointerMove}
+          onTouchStart={handlePointerDown}
+          onTouchMove={handlePointerMove}
+          onWheel={handleWheel}
         >
-            {renderItems.map((item) => (
-                <div
-                    key={item.habit.id}
-                    className={`
-                        absolute top-1/2 left-1/2 aspect-square origin-center will-change-transform
-                        ${isMobile ? 'w-[90vw] max-w-[400px]' : 'w-[400px]'}
-                    `}
-                    style={{
-                        ...item.style,
-                        transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                    }}
-                >
-                    <HabitCard
-                        habit={item.habit}
-                        isActive={item.isActive}
-                        onToggleDay={(date) => toggleHabitDay(item.habit.id, date)}
-                        onEditDetails={() => setEditingHabit(item.habit)}
-                        onUpdate={updateUserInfo}
-                    />
-                </div>
+
+          {/* Carousel Container */}
+          <div
+              ref={containerRef}
+              className={`relative w-0 h-0 transform-style-3d ${isMobile ? '' : '-translate-y-20'}`}
+              style={{
+                  transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
+              }}
+          >
+              {renderItems.map((item) => (
+                  <div
+                      key={item.habit.id}
+                      className={`
+                          absolute top-1/2 left-1/2 aspect-square origin-center will-change-transform
+                          ${isMobile ? 'w-[90vw] max-w-[400px]' : 'w-[400px]'}
+                      `}
+                      style={{
+                          ...item.style,
+                          transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                      }}
+                  >
+                      <HabitCard
+                          habit={item.habit}
+                          isActive={item.isActive}
+                          onToggleDay={(date) => toggleHabitDay(item.habit.id, date)}
+                          onEditDetails={() => setEditingHabit(item.habit)}
+                          onUpdate={updateUserInfo}
+                      />
+                  </div>
+              ))}
+          </div>
+
+          {habits.length === 0 && (
+              <div className="absolute z-50 text-center bg-white/80 p-8 border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                  <p className="text-2xl font-bold mb-4">NO HABITS</p>
+                  <Button onClick={() => setIsModalOpen(true)}>START NOW</Button>
+              </div>
+          )}
+
+        </main>
+      ) : (
+        <main className="flex-1 overflow-auto p-6 md:p-12">
+          {/* Grid View */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1400px] mx-auto">
+            {habits.map((habit) => (
+              <div key={habit.id} className="flex justify-center">
+                <HabitCard
+                  habit={habit}
+                  isActive={true}
+                  onToggleDay={(date) => toggleHabitDay(habit.id, date)}
+                  onEditDetails={() => setEditingHabit(habit)}
+                  onUpdate={updateUserInfo}
+                />
+              </div>
             ))}
-        </div>
+          </div>
 
-        {habits.length === 0 && (
-            <div className="absolute z-50 text-center bg-white/80 p-8 border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                <p className="text-2xl font-bold mb-4">NO HABITS</p>
-                <Button onClick={() => setIsModalOpen(true)}>START NOW</Button>
-            </div>
-        )}
-
-      </main>
+          {habits.length === 0 && (
+              <div className="flex justify-center items-center h-full">
+                <div className="text-center bg-white/80 p-8 border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                    <p className="text-2xl font-bold mb-4">NO HABITS</p>
+                    <Button onClick={() => setIsModalOpen(true)}>START NOW</Button>
+                </div>
+              </div>
+          )}
+        </main>
+      )}
 
       {/* Controls Overlay */}
       <div className={`
           absolute z-[3000] pointer-events-none flex gap-4
           ${isMobile ? 'bottom-6 right-6 flex-col' : 'bottom-12 left-0 right-0 justify-center'}
       `}>
-            <Button
-                variant="icon"
-                className={`
-                    pointer-events-auto rounded-full shadow-lg bg-white border-2 border-black
-                    ${isMobile ? 'w-14 h-14' : 'w-16 h-16'}
-                `}
-                onClick={() => setRotation(r => r - PER_ITEM_ANGLE)}
-            >
-                {isMobile ? <ArrowUp size={24} strokeWidth={3} /> : <ArrowLeft size={24} strokeWidth={3} />}
-            </Button>
-            <Button
-                variant="icon"
-                className={`
-                    pointer-events-auto rounded-full shadow-lg bg-white border-2 border-black
-                    ${isMobile ? 'w-14 h-14' : 'w-16 h-16'}
-                `}
-                onClick={() => setRotation(r => r + PER_ITEM_ANGLE)}
-            >
-                {isMobile ? <ArrowDown size={24} strokeWidth={3} /> : <ArrowRight size={24} strokeWidth={3} />}
-            </Button>
+            {displayMode === 'carousel' ? (
+              <>
+                <Button
+                    variant="icon"
+                    className={`
+                        pointer-events-auto rounded-full shadow-lg bg-white border-2 border-black
+                        ${isMobile ? 'w-14 h-14' : 'w-16 h-16'}
+                    `}
+                    onClick={() => setRotation(r => r - PER_ITEM_ANGLE)}
+                >
+                    {isMobile ? <ArrowUp size={24} strokeWidth={3} /> : <ArrowLeft size={24} strokeWidth={3} />}
+                </Button>
+                <Button
+                    variant="icon"
+                    className={`
+                        pointer-events-auto rounded-full shadow-lg bg-white border-2 border-black
+                        ${isMobile ? 'w-14 h-14' : 'w-16 h-16'}
+                    `}
+                    onClick={() => setDisplayMode('grid')}
+                    title="Grid View"
+                >
+                    <LayoutGrid size={24} strokeWidth={3} />
+                </Button>
+                <Button
+                    variant="icon"
+                    className={`
+                        pointer-events-auto rounded-full shadow-lg bg-white border-2 border-black
+                        ${isMobile ? 'w-14 h-14' : 'w-16 h-16'}
+                    `}
+                    onClick={() => setRotation(r => r + PER_ITEM_ANGLE)}
+                >
+                    {isMobile ? <ArrowDown size={24} strokeWidth={3} /> : <ArrowRight size={24} strokeWidth={3} />}
+                </Button>
+              </>
+            ) : (
+              <Button
+                  variant="icon"
+                  className={`
+                      pointer-events-auto rounded-full shadow-lg bg-white border-2 border-black
+                      ${isMobile ? 'w-14 h-14' : 'w-16 h-16'}
+                  `}
+                  onClick={() => setDisplayMode('carousel')}
+                  title="Carousel View"
+              >
+                  <GalleryHorizontalEnd size={24} strokeWidth={3} />
+              </Button>
+            )}
       </div>
 
       <NewHabitModal
