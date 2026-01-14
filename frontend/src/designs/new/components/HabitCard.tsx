@@ -1,35 +1,63 @@
-import React, { useState, useMemo } from 'react';
-import { THEME_STYLES, WEEK_DAYS, ThemeColor } from '../types';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { THEME_STYLES, WEEK_DAYS } from '../types';
 import { NewDesignHabit } from '../../../state/user';
-import { Check, Bot, MoreHorizontal } from 'lucide-react';
+import { Bot, MoreHorizontal, Trash2, Send } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getHabitMotivation } from '../services/geminiService';
+import { api } from '../../../utils/api';
 
 interface HabitCardProps {
   habit: NewDesignHabit;
   isActive: boolean;
   onToggleDay: (date: string) => void;
   onEditDetails?: () => void;
+  onUpdate?: () => void;
 }
 
-type ViewMode = 'WEEK' | 'MONTH' | 'YEAR';
+type ViewMode = 'MONTH' | 'YEAR';
 
-const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onEditDetails }) => {
+const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onEditDetails, onUpdate }) => {
   const styles = THEME_STYLES[habit.theme];
   const [aiMessage, setAiMessage] = useState<string | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('MONTH');
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [noteInput, setNoteInput] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const noteInputRef = useRef<HTMLInputElement>(null);
 
   // Helper to get YYYY-MM-DD
   const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
-  const handleToggle = (dateStr: string) => {
-    if (!isActive) return;
-    
-    const isCompleting = !habit.history[dateStr];
-    onToggleDay(dateStr);
+  // Focus note input when selected date changes
+  useEffect(() => {
+    if (selectedDate && noteInputRef.current) {
+      noteInputRef.current.focus();
+    }
+  }, [selectedDate]);
 
-    if (isCompleting) {
+  // Load existing note when selecting a date
+  useEffect(() => {
+    if (selectedDate && habit.completionDetails) {
+      const completion = habit.completionDetails.find(c => {
+        const parsed = new Date(c.day);
+        return parsed.toISOString().split('T')[0] === selectedDate;
+      });
+      setNoteInput(completion?.notes || '');
+    } else {
+      setNoteInput('');
+    }
+  }, [selectedDate, habit.completionDetails]);
+
+  // Handle month day click - new UX
+  const handleMonthDayClick = (dateStr: string) => {
+    if (!isActive) return;
+
+    const isCompleted = !!habit.history[dateStr];
+
+    if (!isCompleted) {
+      // Mark as complete and open note input
+      onToggleDay(dateStr);
       confetti({
         particleCount: 100,
         spread: 70,
@@ -38,6 +66,49 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
         disableForReducedMotion: true
       });
     }
+
+    // Always open note input (for both new and existing completions)
+    setSelectedDate(dateStr);
+  };
+
+  // Save note for selected date
+  const handleSaveNote = async () => {
+    if (!selectedDate || savingNote) return;
+
+    try {
+      setSavingNote(true);
+      // Convert to DB format: "DD MMM YYYY"
+      const date = new Date(selectedDate);
+      const dbFormat = date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+
+      await api.post('/habits/add-notes', {
+        habitId: habit.id,
+        day: dbFormat,
+        notes: noteInput || null,
+      });
+
+      onUpdate?.();
+      setSelectedDate(null);
+      setNoteInput('');
+    } catch (error) {
+      console.error('Error saving note:', error);
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  // Unmark a completion (trash button)
+  const handleUnmark = () => {
+    if (!selectedDate || !isActive) return;
+
+    // Toggle off the completion
+    onToggleDay(selectedDate);
+    setSelectedDate(null);
+    setNoteInput('');
   };
 
   const fetchAiTip = async (e: React.MouseEvent) => {
@@ -52,27 +123,9 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
 
   // --- View Data Generators ---
 
-  // Week View: Current week relative to today
-  const weekDates = useMemo(() => {
-    const today = new Date();
-    const day = today.getDay(); // 0 is Sunday
-    const start = new Date(today);
-    start.setDate(today.getDate() - day); // Start on Sunday
-    const dates = [];
-    for(let i=0; i<7; i++){
-        const d = new Date(start);
-        d.setDate(start.getDate() + i);
-        dates.push(d);
-    }
-    return dates;
-  }, []);
-
   // Calculate count based on view mode
   const viewCount = useMemo(() => {
-    if (viewMode === 'WEEK') {
-      // Count completed days in current week
-      return weekDates.filter(d => habit.history[formatDate(d)]).length;
-    } else if (viewMode === 'MONTH') {
+    if (viewMode === 'MONTH') {
       // Count completed days in current month
       const today = new Date();
       const year = today.getFullYear();
@@ -87,11 +140,10 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
       // Count completed days in last 52 weeks (YEAR view)
       return Object.values(habit.history).filter(Boolean).length;
     }
-  }, [viewMode, weekDates, habit.history]);
+  }, [viewMode, habit.history]);
 
   // Label for the count
   const viewLabel = useMemo(() => {
-    if (viewMode === 'WEEK') return 'This Week';
     if (viewMode === 'MONTH') return 'This Month';
     return 'This Year';
   }, [viewMode]);
@@ -139,33 +191,6 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
 
   // --- Renderers ---
 
-  const renderWeek = () => (
-      <div className="flex justify-between items-end h-full">
-        {weekDates.map((date, idx) => {
-            const dateStr = formatDate(date);
-            const isCompleted = !!habit.history[dateStr];
-            const isToday = formatDate(new Date()) === dateStr;
-
-            return (
-                <div key={idx} className="flex flex-col items-center gap-2 group flex-1">
-                    <button
-                        onClick={() => handleToggle(dateStr)}
-                        className={`
-                            w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-black flex items-center justify-center transition-all duration-200
-                            ${isCompleted ? 'bg-black text-white' : 'bg-transparent hover:bg-black/10'}
-                            ${isToday && !isCompleted ? 'animate-pulse' : ''}
-                            ${!isActive ? 'cursor-default' : 'cursor-pointer active:scale-90'}
-                        `}
-                    >
-                        {isCompleted && <Check size={20} strokeWidth={4} />}
-                    </button>
-                    <span className="text-[0.6rem] font-bold uppercase tracking-widest">{WEEK_DAYS[date.getDay()]}</span>
-                </div>
-            );
-        })}
-    </div>
-  );
-
   const renderMonth = () => (
       <div className="h-full flex flex-col">
           {/* Days Header */}
@@ -181,14 +206,16 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
                   const dateStr = formatDate(date);
                   const isCompleted = !!habit.history[dateStr];
                   const isToday = formatDate(new Date()) === dateStr;
+                  const isSelected = selectedDate === dateStr;
                   return (
                       <button
                         key={i}
-                        onClick={() => handleToggle(dateStr)}
+                        onClick={() => handleMonthDayClick(dateStr)}
                         className={`
                             aspect-square flex items-center justify-center border-2 text-[0.7rem] font-bold transition-all
                             ${isCompleted ? 'bg-black text-white border-black' : 'bg-transparent border-gray-300 hover:border-black text-black'}
                             ${isToday ? 'ring-2 ring-black ring-offset-1' : ''}
+                            ${isSelected ? 'ring-2 ring-offset-1 ring-blue-500' : ''}
                         `}
                       >
                           {date.getDate()}
@@ -196,6 +223,36 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
                   )
               })}
           </div>
+
+          {/* Note Input (appears when a day is selected) */}
+          {selectedDate && (
+            <div className="mt-3 flex gap-2 items-center animate-in slide-in-from-bottom duration-200">
+              <input
+                ref={noteInputRef}
+                type="text"
+                value={noteInput}
+                onChange={(e) => setNoteInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveNote()}
+                placeholder={`Note for ${new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}...`}
+                className="flex-1 px-3 py-2 text-sm border-2 border-black focus:outline-none focus:ring-2 focus:ring-black"
+              />
+              <button
+                onClick={handleSaveNote}
+                disabled={savingNote}
+                className="p-2 bg-black text-white border-2 border-black hover:bg-gray-800 transition-colors disabled:opacity-50"
+                title="Save note"
+              >
+                <Send size={16} />
+              </button>
+              <button
+                onClick={handleUnmark}
+                className="p-2 border-2 border-black hover:bg-red-100 text-red-600 transition-colors"
+                title="Remove completion"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          )}
       </div>
   );
 
@@ -310,10 +367,13 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
         {/* View Toggles (Only when active) */}
         {isActive && (
             <div className="flex gap-2 mb-4">
-                {(['WEEK', 'MONTH', 'YEAR'] as ViewMode[]).map(mode => (
+                {(['MONTH', 'YEAR'] as ViewMode[]).map(mode => (
                     <button
                         key={mode}
-                        onClick={() => setViewMode(mode)}
+                        onClick={() => {
+                          setViewMode(mode);
+                          setSelectedDate(null); // Clear selection when switching views
+                        }}
                         className={`
                             px-2 py-1 text-[0.6rem] font-bold border-2 border-black uppercase transition-all
                             ${viewMode === mode ? 'bg-black text-white' : 'bg-transparent hover:bg-black/10'}
@@ -322,10 +382,10 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
                         {mode}
                     </button>
                 ))}
-                
+
                 <div className="flex-1" />
 
-                <button 
+                <button
                     onClick={fetchAiTip}
                     className="p-1 bg-black/10 hover:bg-black/20 rounded-full transition-colors group"
                     title="Get AI Motivation"
@@ -340,7 +400,6 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
              {/* If not active, we just show the month view as a preview, but faded */}
              {!isActive ? renderMonth() : (
                  <>
-                    {viewMode === 'WEEK' && renderWeek()}
                     {viewMode === 'MONTH' && renderMonth()}
                     {viewMode === 'YEAR' && renderYear()}
                  </>

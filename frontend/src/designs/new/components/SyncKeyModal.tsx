@@ -71,7 +71,7 @@ const SyncKeyModal: React.FC<SyncKeyModalProps> = ({ isOpen, onClose, isNewUser 
       />
 
       {/* Modal */}
-      <div className="relative bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-md">
+      <div className="relative bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-md text-black">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b-2 border-black">
           <h2 className="text-xl font-black uppercase tracking-tight">

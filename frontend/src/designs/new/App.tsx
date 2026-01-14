@@ -235,8 +235,8 @@ const NewDesignApp: React.FC = () => {
   // Note: Removed sorting to prevent DOM reordering during animation
   // z-index in CSS handles the visual stacking correctly
 
-  // Show loading state
-  if (!loaded) {
+  // Show loading state (but allow sync key modal for new users)
+  if (!loaded && !isNewUser) {
     return (
       <div className="fixed inset-0 w-full h-full bg-[#E5E5E5] flex flex-col items-center justify-center font-space">
         {/* Logo/Branding */}
@@ -263,6 +263,19 @@ const NewDesignApp: React.FC = () => {
         <p className="mt-6 text-sm font-bold uppercase tracking-widest text-gray-500">
           Loading your habits...
         </p>
+      </div>
+    );
+  }
+
+  // Show welcome modal for new users (no sync key)
+  if (isNewUser && isSyncKeyOpen) {
+    return (
+      <div className="fixed inset-0 w-full h-full bg-[#E5E5E5] flex flex-col items-center justify-center font-space">
+        <SyncKeyModal
+          isOpen={isSyncKeyOpen}
+          onClose={() => { setIsSyncKeyOpen(false); setIsNewUser(false); }}
+          isNewUser={isNewUser}
+        />
       </div>
     );
   }
@@ -419,6 +432,7 @@ const NewDesignApp: React.FC = () => {
                         isActive={item.isActive}
                         onToggleDay={(date) => toggleHabitDay(item.habit.id, date)}
                         onEditDetails={() => setEditingHabit(item.habit)}
+                        onUpdate={updateUserInfo}
                     />
                 </div>
             ))}
