@@ -12,11 +12,12 @@ interface HabitCardProps {
   onToggleDay: (date: string) => void;
   onEditDetails?: () => void;
   onUpdate?: () => void;
+  compact?: boolean;
 }
 
 type ViewMode = 'MONTH' | 'YEAR';
 
-const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onEditDetails, onUpdate }) => {
+const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onEditDetails, onUpdate, compact }) => {
   const styles = THEME_STYLES[habit.theme];
   const [viewMode, setViewMode] = useState<ViewMode>('MONTH');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -289,13 +290,13 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
   };
 
   return (
-    <div 
+    <div
       className={`
         relative transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
-        w-[340px] md:w-[400px] aspect-square flex flex-col justify-between
-        border-2 
-        ${isActive 
-            ? `bg-opacity-100 ${styles.bg} border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] scale-100` 
+        ${compact ? 'w-full max-w-[400px]' : 'w-[340px] md:w-[400px]'} aspect-square flex flex-col justify-between
+        border-2
+        ${isActive
+            ? `bg-opacity-100 ${styles.bg} border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] scale-100`
             : 'bg-white border-gray-200 shadow-none scale-95'}
       `}
     >

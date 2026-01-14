@@ -449,9 +449,14 @@ const NewDesignApp: React.FC = () => {
 
         </main>
       ) : (
-        <main className="flex-1 overflow-auto p-6 md:p-12">
-          {/* Grid View */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1400px] mx-auto">
+        <main className="flex-1 overflow-auto p-4 md:p-8">
+          {/* Grid View - auto-fit columns based on available space, max 4 columns */}
+          <div
+            className="grid gap-4 md:gap-6 max-w-[1800px] mx-auto"
+            style={{
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
+            }}
+          >
             {habits.map((habit) => (
               <div key={habit.id} className="flex justify-center">
                 <HabitCard
@@ -460,6 +465,7 @@ const NewDesignApp: React.FC = () => {
                   onToggleDay={(date) => toggleHabitDay(habit.id, date)}
                   onEditDetails={() => setEditingHabit(habit)}
                   onUpdate={updateUserInfo}
+                  compact
                 />
               </div>
             ))}
