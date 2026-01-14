@@ -238,13 +238,15 @@ const NewDesignApp: React.FC = () => {
 
   // Show loading state (but allow sync key modal for new users)
   if (!loaded && !isNewUser) {
+    // Read directly from localStorage to ensure we have the latest value during loading
+    const displayName = localStorage.getItem('userName') || 'You';
     return (
       <div className="fixed inset-0 w-full h-full bg-[#E5E5E5] flex flex-col items-center justify-center font-space">
         {/* Logo/Branding */}
         <div className="border-4 border-black p-4 md:p-6 bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-8">
           <h1 className="text-2xl md:text-4xl font-black leading-none tracking-tight">Habit Tracker</h1>
           <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
-            <span>{userName || 'You'}</span>
+            <span>{displayName}</span>
           </div>
         </div>
 
