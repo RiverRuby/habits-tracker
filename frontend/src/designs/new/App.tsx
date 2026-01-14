@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Plus, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, CalendarDays, Layers, Phone, Archive, Key, ChevronDown, LayoutGrid, GalleryHorizontalEnd } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, CalendarDays, Layers, Phone, History, Key, ChevronDown, LayoutGrid, GalleryHorizontalEnd } from 'lucide-react';
 import HabitCard from './components/HabitCard';
 import NewHabitModal from './components/NewHabitModal';
 import SettingsModal from './components/SettingsModal';
@@ -298,14 +298,14 @@ const NewDesignApp: React.FC = () => {
             <Button onClick={toggleView} variant="icon" title="Habits" className="w-10 h-10 md:w-auto md:h-auto">
               <Layers size={18} />
             </Button>
-            <Button onClick={() => setIsSyncKeyOpen(true)} variant="icon" title="Sync Key" className="w-10 h-10 md:w-auto md:h-auto">
-              <Key size={18} />
-            </Button>
             <Button onClick={() => setIsSettingsOpen(true)} variant="icon" title="Call Settings" className="w-10 h-10 md:w-auto md:h-auto">
               <Phone size={18} />
             </Button>
-            <Button onClick={toggleDesign} variant="icon" title="Archive" className="w-10 h-10 md:w-auto md:h-auto">
-              <Archive size={18} />
+            <Button onClick={() => setIsSyncKeyOpen(true)} variant="icon" title="Sync Key" className="w-10 h-10 md:w-auto md:h-auto">
+              <Key size={18} />
+            </Button>
+            <Button onClick={toggleDesign} variant="icon" title="Classic Design" className="w-10 h-10 md:w-auto md:h-auto">
+              <History size={18} />
             </Button>
           </div>
         </header>
@@ -380,17 +380,17 @@ const NewDesignApp: React.FC = () => {
             <Button onClick={toggleView} variant="icon" title="Annual" className="w-10 h-10 md:w-auto md:h-auto">
               <CalendarDays size={18} />
             </Button>
-            <Button onClick={() => setIsSyncKeyOpen(true)} variant="icon" title="Sync Key" className="w-10 h-10 md:w-auto md:h-auto">
-              <Key size={18} />
+            <Button onClick={() => setIsManageOpen(true)} variant="icon" title="Manage Habits" className="w-10 h-10 md:w-auto md:h-auto">
+              <Layers size={18} />
             </Button>
             <Button onClick={() => setIsSettingsOpen(true)} variant="icon" title="Call Settings" className="w-10 h-10 md:w-auto md:h-auto">
               <Phone size={18} />
             </Button>
-            <Button onClick={toggleDesign} variant="icon" title="Archive" className="w-10 h-10 md:w-auto md:h-auto">
-              <Archive size={18} />
+            <Button onClick={() => setIsSyncKeyOpen(true)} variant="icon" title="Sync Key" className="w-10 h-10 md:w-auto md:h-auto">
+              <Key size={18} />
             </Button>
-            <Button onClick={() => setIsManageOpen(true)} variant="icon" title="Manage Habits" className="w-10 h-10 md:w-auto md:h-auto">
-              <Layers size={18} />
+            <Button onClick={toggleDesign} variant="icon" title="Classic Design" className="w-10 h-10 md:w-auto md:h-auto">
+              <History size={18} />
             </Button>
             <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 text-sm md:text-base px-3 py-2 md:px-6">
               <Plus size={16} strokeWidth={3} /> {isMobile ? 'NEW' : 'NEW HABIT'}
