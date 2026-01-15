@@ -106,7 +106,7 @@ const NewDesignApp: React.FC = () => {
     const sensitivity = isMobile ? 0.5 : 0.4;
 
     if (isMobile) {
-        setRotation(startRotation - delta * sensitivity);
+        setRotation(startRotation + delta * sensitivity);
     } else {
         setRotation(startRotation + delta * sensitivity);
     }
