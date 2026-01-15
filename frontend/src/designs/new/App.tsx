@@ -376,7 +376,7 @@ const NewDesignApp: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-[#E5E5E5] flex flex-col overflow-x-hidden overflow-y-hidden font-space text-black select-none touch-none">
+    <div className={`fixed inset-0 w-full h-full bg-[#E5E5E5] flex flex-col overflow-x-hidden font-space text-black select-none ${displayMode === 'carousel' ? 'touch-none overflow-y-hidden' : 'overflow-y-auto'}`}>
 
       {/* Header */}
       {isMobile ? (
@@ -537,10 +537,10 @@ const NewDesignApp: React.FC = () => {
 
         </main>
       ) : (
-        <main className="flex-1 overflow-auto p-4 md:p-8">
+        <main className="flex-1 overflow-auto p-4 md:p-8 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
           {/* Grid View - auto-fit columns based on available space, max 4 columns */}
           <div
-            className="grid gap-4 md:gap-6 max-w-[1800px] mx-auto"
+            className="grid gap-6 md:gap-6 max-w-[1800px] mx-auto"
             style={{
               gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
             }}
