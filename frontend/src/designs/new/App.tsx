@@ -497,10 +497,10 @@ const NewDesignApp: React.FC = () => {
           onWheel={handleWheel}
         >
 
-          {/* Carousel Container */}
+          {/* Carousel Container - shifted left by 4px to account for 8px card shadow */}
           <div
               ref={containerRef}
-              className={`relative w-0 h-0 transform-style-3d ${isMobile ? '' : '-translate-y-20'}`}
+              className={`relative w-0 h-0 transform-style-3d ${isMobile ? '-translate-x-1' : '-translate-y-20 -translate-x-1'}`}
               style={{
                   transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
               }}
