@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Option 1: 4-color grid with checkmark - like a habit tracker -->
+  <!-- Shadow -->
+  <rect x="10" y="10" width="52" height="52" fill="black"/>
+  <!-- Main container -->
+  <rect x="2" y="2" width="52" height="52" fill="white" stroke="black" stroke-width="4"/>
+  <!-- 4-color quadrants -->
+  <rect x="6" y="6" width="20" height="20" fill="#ff9f43"/>
+  <rect x="28" y="6" width="20" height="20" fill="#54a0ff"/>
+  <rect x="6" y="28" width="20" height="20" fill="#2ecc71"/>
+  <rect x="28" y="28" width="20" height="20" fill="#feca57"/>
+  <!-- Bold checkmark overlay -->
+  <path d="M14 28 L22 36 L40 16" fill="none" stroke="black" stroke-width="6" stroke-linecap="square"/>
+</svg>

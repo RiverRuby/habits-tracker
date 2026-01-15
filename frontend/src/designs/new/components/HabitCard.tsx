@@ -26,8 +26,9 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
   const [monthOffset, setMonthOffset] = useState(0); // 0 = current month, -1 = previous, etc.
   const noteInputRef = useRef<HTMLInputElement>(null);
 
-  // Helper to get YYYY-MM-DD
-  const formatDate = (d: Date) => d.toISOString().split('T')[0];
+  // Helper to get YYYY-MM-DD in local timezone (not UTC)
+  const formatDate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
   // Focus note input when selected date changes
   useEffect(() => {

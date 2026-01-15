@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Option 3: Punched daily tracker - 4 colored circles (days) -->
+  <!-- Shadow -->
+  <rect x="10" y="10" width="52" height="52" fill="black"/>
+  <!-- Main white card -->
+  <rect x="2" y="2" width="52" height="52" fill="white" stroke="black" stroke-width="4"/>
+  <!-- 4 colored punch holes representing daily habit tracking -->
+  <circle cx="18" cy="18" r="9" fill="#ff9f43" stroke="black" stroke-width="2"/>
+  <circle cx="40" cy="18" r="9" fill="#54a0ff" stroke="black" stroke-width="2"/>
+  <circle cx="18" cy="40" r="9" fill="#2ecc71" stroke="black" stroke-width="2"/>
+  <!-- Filled/completed day -->
+  <circle cx="40" cy="40" r="9" fill="#feca57" stroke="black" stroke-width="2"/>
+  <path d="M34 40 L38 44 L47 34" fill="none" stroke="black" stroke-width="3" stroke-linecap="square"/>
+</svg>

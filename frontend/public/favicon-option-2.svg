@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Option 2: Stacked cards/rolodex style with 4 colors - smaller cards, more offset -->
+  <!-- Back card (yellow) -->
+  <rect x="24" y="4" width="36" height="36" fill="#feca57" stroke="black" stroke-width="2.5"/>
+  <!-- Third card (green) -->
+  <rect x="17" y="11" width="36" height="36" fill="#2ecc71" stroke="black" stroke-width="2.5"/>
+  <!-- Second card (blue) -->
+  <rect x="10" y="18" width="36" height="36" fill="#54a0ff" stroke="black" stroke-width="2.5"/>
+  <!-- Front card (orange) -->
+  <rect x="3" y="25" width="36" height="36" fill="#ff9f43" stroke="black" stroke-width="2.5"/>
+  <!-- Bold H on front -->
+  <path d="M11 33 H16 V41 H24 V33 H29 V55 H24 V47 H16 V55 H11 Z" fill="black"/>
+</svg>

@@ -244,8 +244,11 @@ const NewDesignApp: React.FC = () => {
       <div className="fixed inset-0 w-full h-full bg-[#E5E5E5] flex flex-col items-center justify-center font-space">
         {/* Logo/Branding */}
         <div className="border-4 border-black p-4 md:p-6 bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-8">
-          <h1 className="text-2xl md:text-4xl font-black leading-none tracking-tight">Habit Tracker</h1>
-          <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
+          <div className="flex items-center gap-3">
+            <img src="/favicon-option-2.svg" alt="Logo" className="w-10 h-10 md:w-12 md:h-12" />
+            <h1 className="text-2xl md:text-4xl font-black leading-none tracking-tight">Habit Tracker</h1>
+          </div>
+          <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1 text-center">
             <span>{displayName}</span>
           </div>
         </div>
@@ -290,8 +293,11 @@ const NewDesignApp: React.FC = () => {
         {/* Header */}
         <header className="flex justify-between items-start p-4 md:p-6 z-[3000] relative pointer-events-auto shrink-0">
           <div className="border-4 border-black p-2 md:p-3 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">Habit Tracker</h1>
-              <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
+              <div className="flex items-center gap-2">
+                <img src="/favicon-option-2.svg" alt="Logo" className="w-7 h-7 md:w-8 md:h-8" />
+                <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">Habit Tracker</h1>
+              </div>
+              <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1 text-center">
                   <span>{userName || 'You'}</span>
               </div>
           </div>
@@ -330,8 +336,11 @@ const NewDesignApp: React.FC = () => {
       <header className="flex justify-between items-start p-4 md:p-6 z-[3000] relative pointer-events-auto shrink-0">
         <div className="relative">
           <div className="border-4 border-black p-2 md:p-3 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">Habit Tracker</h1>
-              <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1">
+              <div className="flex items-center gap-2">
+                <img src="/favicon-option-2.svg" alt="Logo" className="w-7 h-7 md:w-8 md:h-8" />
+                <h1 className="text-lg md:text-2xl font-black leading-none tracking-tight">Habit Tracker</h1>
+              </div>
+              <div className="text-[0.6rem] font-bold mt-1 tracking-widest border-t-2 border-black pt-1 text-center">
                   <span>{userName || 'You'}</span>
               </div>
           </div>
