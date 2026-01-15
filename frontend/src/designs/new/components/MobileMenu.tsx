@@ -49,10 +49,10 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
       <Button
         variant="icon"
         onClick={() => onToggleMenu(true)}
-        className="w-10 h-10"
+        className="w-9 h-9"
         title="Menu"
       >
-        <Menu size={20} strokeWidth={2.5} />
+        <Menu size={18} strokeWidth={2.5} />
       </Button>
 
       {/* Overlay */}

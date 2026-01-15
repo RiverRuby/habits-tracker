@@ -295,7 +295,7 @@ const NewDesignApp: React.FC = () => {
         {/* Header */}
         {isMobile ? (
           /* Mobile Header - Same as main view but with carousel icon to switch back */
-          <header className="z-[3000] relative pointer-events-auto shrink-0">
+          <header className="z-[3000] relative pointer-events-auto shrink-0 safe-area-top bg-white">
             <div className="flex items-center justify-between px-4 py-3 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
               <div className="flex items-center gap-2">
                 <img src="/favicon-option-2.svg" alt="Logo" className="w-7 h-7" />
@@ -376,12 +376,12 @@ const NewDesignApp: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-[#E5E5E5] flex flex-col overflow-hidden font-space text-black select-none touch-none">
+    <div className="fixed inset-0 w-full h-full bg-[#E5E5E5] flex flex-col overflow-x-hidden overflow-y-hidden font-space text-black select-none touch-none">
 
       {/* Header */}
       {isMobile ? (
         /* Mobile Header - Full width title bar */
-        <header className="z-[3000] relative pointer-events-auto shrink-0">
+        <header className="z-[3000] relative pointer-events-auto shrink-0 safe-area-top bg-white">
           <div className="flex items-center justify-between px-4 py-3 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.1)]">
             <div className="flex items-center gap-2">
               <img src="/favicon-option-2.svg" alt="Logo" className="w-7 h-7" />
@@ -510,7 +510,7 @@ const NewDesignApp: React.FC = () => {
                       key={item.habit.id}
                       className={`
                           absolute top-1/2 left-1/2 aspect-square origin-center will-change-transform
-                          ${isMobile ? 'w-[90vw] max-w-[400px]' : 'w-[400px]'}
+                          ${isMobile ? 'w-[85vw] max-w-[380px]' : 'w-[400px]'}
                       `}
                       style={{
                           ...item.style,
