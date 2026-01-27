@@ -66,11 +66,10 @@ export const parseDate = (dateStr: string): Date => {
   let day: number, monthIndex: number, year: number;
 
   if (parts.length === 4) {
-    // Classic format: "Wed, 8 Jan, 2026"
-    const [_, dayStr, monthStr, yearStr] = parts;
-    day = parseInt(dayStr, 10);
-    monthIndex = MONTH_MAP[monthStr.replace(',', '')];
-    year = parseInt(yearStr, 10);
+    // Classic format: "Wed, 8 Jan, 2026" - skip the weekday (parts[0])
+    day = parseInt(parts[1], 10);
+    monthIndex = MONTH_MAP[parts[2].replace(',', '')];
+    year = parseInt(parts[3], 10);
   } else if (parts.length === 3) {
     // DB format: "07 Jan 2026"
     const [dayStr, monthStr, yearStr] = parts;
