@@ -52,29 +52,41 @@ export const syncCode = (code: string) => {
   localStorage.setItem("ID", code);
 };
 
+const MONTH_MAP: Record<string, number> = {
+  'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+  'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+};
+
 export const parseDate = (dateStr: string): Date => {
   // Handle both formats:
   // Classic: "Wed, 8 Jan, 2026" (weekday, day month, year)
   // DB: "07 Jan 2026" (day month year)
   const parts = dateStr.split(" ");
 
-  let parsedDate: Date;
+  let day: number, monthIndex: number, year: number;
+
   if (parts.length === 4) {
     // Classic format: "Wed, 8 Jan, 2026"
-    const [_, day, month, year] = parts;
-    parsedDate = new Date(`${day} ${month} ${year}`);
+    const [_, dayStr, monthStr, yearStr] = parts;
+    day = parseInt(dayStr, 10);
+    monthIndex = MONTH_MAP[monthStr.replace(',', '')];
+    year = parseInt(yearStr, 10);
   } else if (parts.length === 3) {
     // DB format: "07 Jan 2026"
-    const [day, month, year] = parts;
-    parsedDate = new Date(`${day} ${month} ${year}`);
+    const [dayStr, monthStr, yearStr] = parts;
+    day = parseInt(dayStr, 10);
+    monthIndex = MONTH_MAP[monthStr];
+    year = parseInt(yearStr, 10);
   } else {
     throw new Error(`Invalid date format: ${dateStr}`);
   }
 
-  if (isNaN(parsedDate.getTime())) {
+  if (isNaN(day) || monthIndex === undefined || isNaN(year)) {
     throw new Error(`Invalid date format: ${dateStr}`);
   }
-  return parsedDate;
+
+  // Use numeric constructor to avoid browser parsing inconsistencies
+  return new Date(year, monthIndex, day);
 };
 
 export const calculateStreaks = (completedDays: string[]) => {
