@@ -33,7 +33,13 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, isActive, onToggleDay, onE
   // Focus note input when selected date changes
   useEffect(() => {
     if (selectedDate && noteInputRef.current) {
-      noteInputRef.current.focus();
+      // Small delay helps on mobile browsers
+      setTimeout(() => {
+        if (noteInputRef.current) {
+          noteInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          noteInputRef.current.focus();
+        }
+      }, 100);
     }
   }, [selectedDate]);
 
